@@ -4,6 +4,8 @@ Sketch for the leve0 of the setup */
 #include <Wire.h>
 
 #define DEBUG
+#define FALSE      0
+#define TRUE       1
 #define LOAD0_R   A0
 #define LOAD1_R   A1
 #define LOAD2_R   A3
@@ -29,14 +31,14 @@ char recvBuffer[BufferSize];
 
 unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
-unsigned int NodeAssignedLoad = 1234;
+unsigned int NodeAssignedLoad = 12345;
 float NodePrio = 12.34; 
 float Pstep = 0.1;
 
 struct Load{
   unsigned char readPin;
   unsigned char writePin;
-  unsigned int DL;
+  //unsigned int DL;
   unsigned int DCL;
   unsigned int ASL;
   float fixPrio;
@@ -49,9 +51,9 @@ Load loads[NUM_LOADS];
 
 //Add more if necessary
 void LoadInit(){
-  loads[0] = (struct Load){LOAD0_R, LOAD0_W, 0, 0, 0, 1.0, 1.0, LOW};
-  loads[1] = (struct Load){LOAD1_R, LOAD1_W, 0, 0, 0, 2.0, 2.0, LOW};
-  loads[2] = (struct Load){LOAD2_R, LOAD2_W, 0, 0, 0, 3.0, 3.0, LOW};
+  loads[0] = (struct Load){LOAD0_R, LOAD0_W, 0, 0,/* 0,*/ 1.0, 1.0, HIGH};
+  loads[1] = (struct Load){LOAD1_R, LOAD1_W, 0, 0,/* 0,*/ 2.0, 2.0, HIGH};
+  loads[2] = (struct Load){LOAD2_R, LOAD2_W, 0, 0,/* 0,*/ 3.0, 3.0, HIGH};
 }
 
 
@@ -105,11 +107,11 @@ void cycLoadRead(){
   #ifdef DEBUG
   Serial.print("Inside cycLoadRead\n");
   #endif
-  
-  loads[0].DCL = analogRead(loads[0].readPin);
-  loads[1].DCL = analogRead(loads[1].readPin);
-  loads[2].DCL = analogRead(loads[2].readPin);
- // loads[3].DCL = analogRead(loads[3].readPin);
+  NodeTotalLoad = 0;
+  for(int i =0; i< NUM_LOADS; i++){
+    loads[i].DCL = analogRead(loads[i].readPin);
+    NodeTotalLoad += loads[i].DCL;
+  }
  
   #ifdef DEBUG
   Serial.print("Inside cycLoadRead\n");
@@ -170,7 +172,7 @@ void cycComm(){
      Serial.print("\n");
  
      Wire.endTransmission();
-         Serial.print("Sent the data to Parent\n");
+     Serial.print("Sent the data to Parent\n");
    }
    
   #ifdef DEBUG
@@ -222,7 +224,7 @@ unsigned char isLowestPrio(int index){
     // check if the mentioned node has the highest PRIORITY
     for(int i =0; i< NUM_LOADS; i++){
       if(loads[i].state == HIGH){
-        if(loads[i].DynPrio > loads[index].DynPrio){
+        if(loads[i].dynPrio > loads[index].dynPrio){
                 return FALSE;
         }
       }
@@ -236,6 +238,7 @@ void cycLogic(){
   #endif
   
   // TO switch the lods off
+  if(NodeTotalLoad > NodeAssignedLoad){
   while(NodeTotalLoad > NodeAssignedLoad){
     unsigned char index = 0;
     
@@ -248,7 +251,8 @@ void cycLogic(){
          }
       }
     }
-   } 
+   }
+  } 
   
   // To switch the loads ON
   else{
@@ -263,17 +267,21 @@ void cycLogic(){
     }
   }
   
-   for(int i=0; i< NUM_LOADS; i++){
-        if(loads[i].DCL > loads[i].ASL + TOLERANCE){
-             loads[i].state = LOW;
-        }
-     
   #ifdef DEBUG
   Serial.print("Exit cycLogic\n");
   #endif
 }  
 }
-  
+ 
+ 
+ void debug(){
+      
+     for(int i =0; i< NUM_LOADS; i++){
+       Serial.print("Load"); Serial.print(i, DEC);Serial.print(":");
+        Serial.print("State"); Serial.print(loads[i].state, DEC);Serial.print("\n");
+        Serial.print("DCL"); Serial.print(loads[i].DCL, DEC);Serial.print("\n");
+     } 
+ } 
   
 void NodeTask(){
   /*
@@ -283,12 +291,17 @@ void NodeTask(){
   Serial.print("Inside NodeTask\n");
   #endif
   
-    cycLogic();
+  
     cycLoadRead();
     cycLoadWrite();
     cycLoadCalc();
     cycPrioCalc();
     cycComm();
+      cycLogic();
+      
+      #ifdef DEBUG
+      debug();
+      #endif
     
   #ifdef DEBUG
   Serial.print("Exit NodeTask\n");
