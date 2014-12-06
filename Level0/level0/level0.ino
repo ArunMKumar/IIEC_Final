@@ -3,7 +3,7 @@ Sketch for the leve0 of the setup */
 
 #include <Wire.h>
 
-#define DEBUG
+//#define DEBUG
 #define FALSE      0
 #define TRUE       1
 #define LOAD0_R   A0
@@ -276,9 +276,9 @@ void cycLogic(){
  
  void debug(){
       
-     for(int i =0; i< NUM_LOADS; i++){
+     for(int i =0; i< 1;/*NUM_LOADS*/ i++){
        Serial.print("Load"); Serial.print(i, DEC);Serial.print(":");
-        Serial.print("State"); Serial.print(loads[i].state, DEC);Serial.print("\n");
+      Serial.print("State"); Serial.print(loads[i].state, DEC);Serial.print("\n");
         Serial.print("DCL"); Serial.print(loads[i].DCL, DEC);Serial.print("\n");
      } 
  } 
@@ -297,12 +297,12 @@ void NodeTask(){
     cycLoadCalc();
     cycPrioCalc();
     cycComm();
-      cycLogic();
+    cycLogic();
       
-      #ifdef DEBUG
-      debug();
-      #endif
-    
+ 
+   debug();
+   delay(4000);
+       
   #ifdef DEBUG
   Serial.print("Exit NodeTask\n");
   #endif
