@@ -218,30 +218,48 @@ void cycPrioCalc(){
   #endif
 }
 
+unsigned char isLowestPrio(int index){
+    // check if the mentioned node has the highest PRIORITY
+    for(int i =0; i< NUM_LOADS; i++){
+      if(loads[i].state == HIGH){
+        if(loads[i].DynPrio > loads[index].DynPrio){
+                return FALSE;
+        }
+      }
+    }
+     return TRUE; 
+}
+
 void cycLogic(){
    #ifdef DEBUG
   Serial.print("Inside cycLogic\n");
   #endif
   
-  
-  if(NodeTotalLoad < NodeAssignedLoad){
+  // TO switch the lods off
+  while(NodeTotalLoad > NodeAssignedLoad){
     unsigned char index = 0;
     
     for(int i =0; i<(NUM_LOADS - 1); i++){
-      if(loads[i].dynPrio > loads[index].dynPrio){
-          index = i;      // Lowest Priority-- Highest Value
+           // is this the lowest priority
+        if(loads[i].state == HIGH){
+            if(isLowestPrio(i)){
+            loads[i].state = LOW;
+            NodeTotalLoad -= loads[i].DCL;
+         }
       }
-   }
-   
-   loads[index].state = LOW;
-  }
+    }
+   } 
   
+  // To switch the loads ON
   else{
     //Assign whatever each one is demanding
     for(int i=0; i< NUM_LOADS; i++)
     {
-      loads[i].ASL = loads[i].DL;
-      loads[i].state = HIGH;    // alow everyone to function
+      if(loads[i].state == LOW){
+        if(NodeTotalLoad + loads[i].DCL  <= NodeAssignedLoad){  // we are in the safe zone
+              loads[i].ASL = loads[i].DCL;    // Keep this in check
+              loads[i].state = HIGH;    // alow everyone to function
+        }
     }
   }
   
