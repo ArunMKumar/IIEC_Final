@@ -237,11 +237,15 @@ unsigned char isLowestPrio(int index){
     // check if the mentioned node has the highest PRIORITY
     for(int i =0; i< NUM_LOADS; i++){
       if(loads[i].state == HIGH){
+        Serial.print("\nComparing "); Serial.print(loads[i].dynPrio); Serial.print(" > " ); Serial.print(loads[index].dynPrio);
         if(loads[i].dynPrio > loads[index].dynPrio){
-                return FALSE;
+          Serial.print("High one found\n");
+          
+          return FALSE;
         }
       }
     }
+    Serial.print("returnning TRUE\n");
      return TRUE; 
 }
 
@@ -255,11 +259,11 @@ void cycLogic(){
   while(NodeTotalLoad > NodeAssignedLoad){
     unsigned char index = 0;
     timeout++;
-    for(int i =0; i<(NUM_LOADS - 1); i++){
+    for(int i =0; i<NUM_LOADS; i++){
            // is this the lowest priority
         if(loads[i].state == HIGH){
           
-          Serial.print("
+                Serial.print("Somewone SHOULD going down\n");
           
             if(isLowestPrio(i)){
                 Serial.print("Somewone is going down\n");
