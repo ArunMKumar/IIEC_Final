@@ -152,7 +152,9 @@ void cycLoadCalc(){
   
   NodeTotalLoad = 0;
   for(int i=0; i<NUM_LOADS; i++){
-    NodeTotalLoad += loads[i].DCL;
+    if(loads[i].state = HIGH){ // only if the load is ON should we check it as a demand
+          NodeTotalLoad += loads[i].DCL;
+    }
   }
   
   #ifdef DEBUG
@@ -256,12 +258,13 @@ void cycLogic(){
   unsigned char timeout = 0;
   // TO switch the lods off
   if(NodeTotalLoad > NodeAssignedLoad){
-  while(NodeTotalLoad > NodeAssignedLoad){
-    unsigned char index = 0;
-    timeout++;
-    for(int i =0; i<NUM_LOADS; i++){
+    
+      while(NodeTotalLoad > NodeAssignedLoad){
+          unsigned char index = 0;
+          timeout++;
+          for(int i =0; i<NUM_LOADS; i++){
            // is this the lowest priority
-        if(loads[i].state == HIGH){
+          if(loads[i].state == HIGH){
           
                 Serial.print("Somewone SHOULD going down\n");
           
@@ -279,6 +282,7 @@ void cycLogic(){
   // To switch the loads ON
   else{
     //Assign whatever each one is demanding
+    Serial.print("demand went down\n");
     for(int i=0; i< NUM_LOADS; i++)
     {
       if(loads[i].state == LOW){
@@ -308,6 +312,7 @@ void cycLogic(){
      
      Serial.print("Node Data: \n");
      Serial.print("NodeTotalLoad : "); Serial.print(NodeTotalLoad); Serial.print("\n");
+     Serial.print("NodeAssignedLoad : "); Serial.print(NodeAssignedLoad); Serial.print("\n");
  } 
   
 void NodeTask(){
@@ -325,11 +330,9 @@ void NodeTask(){
     cycPrioCalc();
     cycComm();
     cycLogic();
-    cycLoadWrite();
-    Serial.print("Back to main\n");
-    
-   debug();
-   delay(4000);
+    cycLoadWrite();   
+    debug();
+    delay(5000);
        
   #ifdef DEBUG
   Serial.print("Exit NodeTask\n");
