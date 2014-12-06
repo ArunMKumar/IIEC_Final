@@ -135,8 +135,8 @@ void cycLoadWrite(){
 //  #endif
   
   for (int i=0; i<NUM_LOADS; i++){
-    Serial.print("writing Load :"); Serial.print(loads[i].writePin); Serial.print("\n");
-    Serial.print("STATE : "); Serial.print(loads[i].state, DEC); Serial.print("\n");
+   // Serial.print("writing Load :"); Serial.print(loads[i].writePin); Serial.print("\n");
+   // Serial.print("STATE : "); Serial.print(loads[i].state, DEC); Serial.print("\n");
     digitalWrite(loads[i].writePin, loads[i].state);
   }
   
@@ -152,11 +152,12 @@ void cycLoadCalc(){
   
   NodeTotalLoad = 0;
   for(int i=0; i<NUM_LOADS; i++){
-    if(loads[i].state = HIGH){ // only if the load is ON should we check it as a demand
+    if(loads[i].state == HIGH){ // only if the load is ON should we check it as a demand
           NodeTotalLoad += loads[i].DCL;
     }
   }
-  
+ // Serial.print("Load Calc: \n");
+//  Serial.print("NodeTotalLoad : "); Serial.print(NodeTotalLoad); Serial.print("\n");
   #ifdef DEBUG
   Serial.print("Exit cycLoadCalc\n");
   #endif
@@ -239,15 +240,15 @@ unsigned char isLowestPrio(int index){
     // check if the mentioned node has the highest PRIORITY
     for(int i =0; i< NUM_LOADS; i++){
       if(loads[i].state == HIGH){
-        Serial.print("\nComparing "); Serial.print(loads[i].dynPrio); Serial.print(" > " ); Serial.print(loads[index].dynPrio);
+      //  Serial.print("\nComparing "); Serial.print(loads[i].dynPrio); Serial.print(" > " ); Serial.print(loads[index].dynPrio);
         if(loads[i].dynPrio > loads[index].dynPrio){
-          Serial.print("High one found\n");
+        //  Serial.print("High one found\n");
           
           return FALSE;
         }
       }
     }
-    Serial.print("returnning TRUE\n");
+    //Serial.print("returnning TRUE\n");
      return TRUE; 
 }
 
@@ -257,6 +258,7 @@ void cycLogic(){
   #endif
   unsigned char timeout = 0;
   // TO switch the lods off
+//  Serial.print("\nComparing "); Serial.print(NodeTotalLoad); Serial.print(" > " ); Serial.print(NodeAssignedLoad);
   if(NodeTotalLoad > NodeAssignedLoad){
     
       while(NodeTotalLoad > NodeAssignedLoad){
@@ -266,10 +268,10 @@ void cycLogic(){
            // is this the lowest priority
           if(loads[i].state == HIGH){
           
-                Serial.print("Somewone SHOULD going down\n");
+               // Serial.print("Somewone SHOULD going down\n");
           
             if(isLowestPrio(i)){
-                Serial.print("Somewone is going down\n");
+               // Serial.print("Somewone is going down\n");
             loads[i].state = LOW;
             NodeTotalLoad -= loads[i].DCL;
          }
@@ -282,7 +284,7 @@ void cycLogic(){
   // To switch the loads ON
   else{
     //Assign whatever each one is demanding
-    Serial.print("demand went down\n");
+  //  Serial.print("demand went down\n");
     for(int i=0; i< NUM_LOADS; i++)
     {
       if(loads[i].state == LOW){
@@ -301,13 +303,14 @@ void cycLogic(){
  
  
  void debug(){
-      //#ifdef DEBUG
+     #ifdef DEBUG
       Serial.print(" Inside sebug \n");
-     // #endif 
+     #endif 
      for(int i =0; i< NUM_LOADS; i++){
       Serial.print("Load "); Serial.print(i, DEC);Serial.print(":\n");
       Serial.print("State : "); Serial.print(loads[i].state, DEC);Serial.print("\n");
       Serial.print("DCL : "); Serial.print(loads[i].DCL, DEC);Serial.print("\n");
+      Serial.print("PRIO : "); Serial.print(loads[i].dynPrio);Serial.print("\n");
      } 
      
      Serial.print("Node Data: \n");
@@ -332,7 +335,7 @@ void NodeTask(){
     cycLogic();
     cycLoadWrite();   
     debug();
-    delay(5000);
+  
        
   #ifdef DEBUG
   Serial.print("Exit NodeTask\n");
@@ -344,6 +347,7 @@ void NodeTask(){
 void loop(){
     digitalWrite(led, HIGH);
     NodeTask();
+    delay(1000);
     digitalWrite(led, LOW);
    
 }
