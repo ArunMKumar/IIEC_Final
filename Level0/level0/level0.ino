@@ -8,8 +8,8 @@ Sketch for the leve0 of the setup */
 #define TRUE       1
 #define LOAD0_R   A0
 #define LOAD1_R   A1
-#define LOAD2_R   A3
-#define LOAD3_R   A5
+#define LOAD2_R   A2
+#define LOAD3_R   A3
 
 #define LOAD0_W   0x02
 #define LOAD1_W   0x03
@@ -21,6 +21,7 @@ Sketch for the leve0 of the setup */
 #define BufferSize     0x04
 #define NUM_LOADS      0x03
 #define TOLERANCE      20U
+#define TIMEOUT        10U
 
 unsigned int led = 13;
 unsigned int ledState = LOW;
@@ -31,7 +32,7 @@ char recvBuffer[BufferSize];
 
 unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
-unsigned int NodeAssignedLoad = 12345;
+unsigned int NodeAssignedLoad = 123;
 float NodePrio = 12.34; 
 float Pstep = 0.1;
 
@@ -54,6 +55,10 @@ void LoadInit(){
   loads[0] = (struct Load){LOAD0_R, LOAD0_W, 0, 0,/* 0,*/ 1.0, 1.0, HIGH};
   loads[1] = (struct Load){LOAD1_R, LOAD1_W, 0, 0,/* 0,*/ 2.0, 2.0, HIGH};
   loads[2] = (struct Load){LOAD2_R, LOAD2_W, 0, 0,/* 0,*/ 3.0, 3.0, HIGH};
+  
+  for(int i =0; i<NUM_LOADS; i++){
+    pinMode(loads[i].writePin, OUTPUT);
+  }
 }
 
 
@@ -71,6 +76,7 @@ void setup(){
   pinMode(led,OUTPUT);
   pinMode(dataSend, INPUT);
   pinMode(recvData, INPUT);
+  LoadInit();
   Wire.begin(NODE_ADDRESS);
   Wire.onReceive(I2Cevent);
   Serial.begin(9600);
@@ -110,6 +116,11 @@ void cycLoadRead(){
   NodeTotalLoad = 0;
   for(int i =0; i< NUM_LOADS; i++){
     loads[i].DCL = analogRead(loads[i].readPin);
+  /*  
+    Serial.print("Reading from : ");
+    Serial.print(loads[i].readPin);
+    Serial.print("\n");
+    */
     NodeTotalLoad += loads[i].DCL;
   }
  
@@ -119,17 +130,19 @@ void cycLoadRead(){
 }
 
 void cycLoadWrite(){
-  #ifdef DEBUG
+ // #ifdef DEBUG
   Serial.print("Inside cycLoadWrite\n");
-  #endif
+//  #endif
   
   for (int i=0; i<NUM_LOADS; i++){
+    Serial.print("writing Load :"); Serial.print(loads[i].writePin); Serial.print("\n");
+    Serial.print("STATE : "); Serial.print(loads[i].state, DEC); Serial.print("\n");
     digitalWrite(loads[i].writePin, loads[i].state);
   }
   
-  #ifdef DEBUG
+ // #ifdef DEBUG
   Serial.print("Exit cycLoadWrite\n");
-  #endif
+//  #endif
 }
 
 void cycLoadCalc(){
@@ -233,24 +246,29 @@ unsigned char isLowestPrio(int index){
 }
 
 void cycLogic(){
-   #ifdef DEBUG
+  #ifdef DEBUG
   Serial.print("Inside cycLogic\n");
   #endif
-  
+  unsigned char timeout = 0;
   // TO switch the lods off
   if(NodeTotalLoad > NodeAssignedLoad){
   while(NodeTotalLoad > NodeAssignedLoad){
     unsigned char index = 0;
-    
+    timeout++;
     for(int i =0; i<(NUM_LOADS - 1); i++){
            // is this the lowest priority
         if(loads[i].state == HIGH){
+          
+          Serial.print("
+          
             if(isLowestPrio(i)){
+                Serial.print("Somewone is going down\n");
             loads[i].state = LOW;
             NodeTotalLoad -= loads[i].DCL;
          }
       }
     }
+    if(timeout > TIMEOUT) break;
    }
   } 
   
@@ -275,12 +293,17 @@ void cycLogic(){
  
  
  void debug(){
-      
-     for(int i =0; i< 1;/*NUM_LOADS*/ i++){
-       Serial.print("Load"); Serial.print(i, DEC);Serial.print(":");
-      Serial.print("State"); Serial.print(loads[i].state, DEC);Serial.print("\n");
-        Serial.print("DCL"); Serial.print(loads[i].DCL, DEC);Serial.print("\n");
+      //#ifdef DEBUG
+      Serial.print(" Inside sebug \n");
+     // #endif 
+     for(int i =0; i< NUM_LOADS; i++){
+      Serial.print("Load "); Serial.print(i, DEC);Serial.print(":\n");
+      Serial.print("State : "); Serial.print(loads[i].state, DEC);Serial.print("\n");
+      Serial.print("DCL : "); Serial.print(loads[i].DCL, DEC);Serial.print("\n");
      } 
+     
+     Serial.print("Node Data: \n");
+     Serial.print("NodeTotalLoad : "); Serial.print(NodeTotalLoad); Serial.print("\n");
  } 
   
 void NodeTask(){
@@ -293,13 +316,14 @@ void NodeTask(){
   
   
     cycLoadRead();
-    cycLoadWrite();
+    //cycLoadWrite();
     cycLoadCalc();
     cycPrioCalc();
     cycComm();
     cycLogic();
-      
- 
+    cycLoadWrite();
+    Serial.print("Back to main\n");
+    
    debug();
    delay(4000);
        
