@@ -32,7 +32,7 @@ char recvBuffer[BufferSize];
 
 unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
-unsigned int NodeAssignedLoad = 123;
+unsigned int NodeAssignedLoad = 1230;
 float NodePrio = 12.34; 
 float Pstep = 0.1;
 
@@ -130,9 +130,9 @@ void cycLoadRead(){
 }
 
 void cycLoadWrite(){
- // #ifdef DEBUG
+  #ifdef DEBUG
   Serial.print("Inside cycLoadWrite\n");
-//  #endif
+ #endif
   
   for (int i=0; i<NUM_LOADS; i++){
    // Serial.print("writing Load :"); Serial.print(loads[i].writePin); Serial.print("\n");
@@ -140,9 +140,9 @@ void cycLoadWrite(){
     digitalWrite(loads[i].writePin, loads[i].state);
   }
   
- // #ifdef DEBUG
+  #ifdef DEBUG
   Serial.print("Exit cycLoadWrite\n");
-//  #endif
+  #endif
 }
 
 void cycLoadCalc(){
@@ -257,6 +257,7 @@ void cycLogic(){
   Serial.print("Inside cycLogic\n");
   #endif
   unsigned char timeout = 0;
+  unsigned int NodeLoadTotalLocal = 0;
   // TO switch the lods off
 //  Serial.print("\nComparing "); Serial.print(NodeTotalLoad); Serial.print(" > " ); Serial.print(NodeAssignedLoad);
   if(NodeTotalLoad > NodeAssignedLoad){
@@ -282,18 +283,28 @@ void cycLogic(){
   } 
   
   // To switch the loads ON
-  else{
     //Assign whatever each one is demanding
   //  Serial.print("demand went down\n");
     for(int i=0; i< NUM_LOADS; i++)
     {
+      NodeLoadTotalLocal = NodeTotalLoad;
       if(loads[i].state == LOW){
-        if(NodeTotalLoad + loads[i].DCL  <= NodeAssignedLoad){  // we are in the safe zone
-              loads[i].ASL = loads[i].DCL;    // Keep this in check
-              loads[i].state = HIGH;    // alow everyone to function
-        }
-    }
-  }
+        //if(NodeTotalLoad + loads[i].DCL  <= NodeAssignedLoad)  // we are in the safe zone
+              //loads[i].ASL = loads[i].DCL;    // Keep this in check
+              for(int j=0; j< NUM_LOADS; j++){
+                if((loads[i].dynPrio < loads[j].dynPrio) && (i != j)){
+                  if(isLowestPrio(j)){
+                          loads[j].state = LOW;
+                          NodeTotalLoad -= loads[j].DCL;
+                  }
+                  if((NodeTotalLoad + loads[i].DCL) < NodeAssignedLoad){
+                    loads[i].state = HIGH;
+                    NodeTotalLoad += loads[i].DCL;
+                  }
+                }
+              }
+          }       
+      
   
   #ifdef DEBUG
   Serial.print("Exit cycLogic\n");
@@ -347,7 +358,7 @@ void NodeTask(){
 void loop(){
     digitalWrite(led, HIGH);
     NodeTask();
-    delay(1000);
+    delay(100);
     digitalWrite(led, LOW);
    
 }
