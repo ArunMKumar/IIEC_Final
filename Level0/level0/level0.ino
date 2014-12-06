@@ -4,20 +4,21 @@ Sketch for the leve0 of the setup */
 #include <Wire.h>
 
 #define DEBUG
-#define Load0_R   A0
-#define Load1_R   A1
-#define Load2_R   A3
-#define Load3_R   A5
+#define LOAD0_R   A0
+#define LOAD1_R   A1
+#define LOAD2_R   A3
+#define LOAD3_R   A5
 
-#define Load0_W   0x02
-#define Load1_W   0x03
-#define Load2_W   0x04
-#define Load3_W   0x05
+#define LOAD0_W   0x02
+#define LOAD1_W   0x03
+#define LOAD2_W   0x04
+#define LOAD3_W   0x05
 
 #define NODE_ADDRESS   0x02
 #define PARENT_ADDRESS 0x01
 #define BufferSize     0x04
-#defien NUM_LOADS      0x03
+#define NUM_LOADS      0x03
+#define TOLERANCE      20U
 
 unsigned int led = 13;
 unsigned int ledState = LOW;
@@ -47,10 +48,11 @@ Load loads[NUM_LOADS];
 
 
 //Add more if necessary
-loads[0] = {LOAD0_R, LOAD0_W, 0, 0, 0, 1.0, 1.0, LOW};
-loads[1] = {LOAD1_R, LOAD1_W, 0, 0, 0, 2.0, 2.0, LOW};
-loads[2] = {LOAD2_R, LOAD2_W, 0, 0, 0, 3.0, 3.0, LOW);
-
+void LoadInit(){
+  loads[0] = (struct Load){LOAD0_R, LOAD0_W, 0, 0, 0, 1.0, 1.0, LOW};
+  loads[1] = (struct Load){LOAD1_R, LOAD1_W, 0, 0, 0, 2.0, 2.0, LOW};
+  loads[2] = (struct Load){LOAD2_R, LOAD2_W, 0, 0, 0, 3.0, 3.0, LOW};
+}
 
 
 void toggleLED(){
@@ -119,7 +121,7 @@ void cycLoadWrite(){
   Serial.print("Inside cycLoadWrite\n");
   #endif
   
-  for (int i=0; i<NUM_LOADS; i++}{
+  for (int i=0; i<NUM_LOADS; i++){
     digitalWrite(loads[i].writePin, loads[i].state);
   }
   
@@ -238,14 +240,21 @@ void cycLogic(){
     //Assign whatever each one is demanding
     for(int i=0; i< NUM_LOADS; i++)
     {
+      loads[i].ASL = loads[i].DL;
       loads[i].state = HIGH;    // alow everyone to function
     }
   }
   
+   for(int i=0; i< NUM_LOADS; i++){
+        if(loads[i].DCL > loads[i].ASL + TOLERANCE){
+             loads[i].state = LOW;
+        }
+     
   #ifdef DEBUG
   Serial.print("Exit cycLogic\n");
   #endif
 }  
+}
   
   
 void NodeTask(){
