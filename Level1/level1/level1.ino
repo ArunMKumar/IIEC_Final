@@ -5,14 +5,14 @@ Data to child sent over I2C, data to parent sent over bluetooth
 
 #include <Wire.h>
 
-#define DEBUG
+//#define DEBUG
 #define NODE_ADDRESS   0x01
 //#define PARENT_ADDRESS 0x00
 #define BufferSize     0x0A
 #define child1Addr     0x02
 #define child2Addr     0x03
-#define CommdurationH   300
-#define CommdurationL   300
+#define CommdurationH   100
+#define CommdurationL   100
 
 static unsigned int I2CCount = 0;
 
@@ -21,7 +21,7 @@ unsigned int I2CledState = LOW;
 unsigned int dataSend1 = 5;    // Signal to send data slave1
 unsigned int dataSend2 = 6;    // signal to send data slave2
 unsigned char dataSendState1 = LOW;
-unsigned char dataSendState2 = HIGH;
+unsigned char dataSendState2 = LOW;
 
 //unsigned int recvData = 6;
 char recvBuffer[BufferSize];
@@ -251,7 +251,7 @@ void receiveEvent(int howMany){
         recvBuffer[i] = Wire.read();
       }
     }
-   dataSendState1 == LOW;
+  // dataSendState1 == LOW;
    child1TotalLoad = *((unsigned int*)recvBuffer);
    child1DemandedLoad = *(((unsigned int*)recvBuffer) + 1);
    child1Prio =   *(((float*)recvBuffer) + 1);
@@ -264,15 +264,15 @@ void receiveEvent(int howMany){
         recvBuffer[i] = Wire.read();
       }
     }
-    dataSendState2 == LOW;
+   // dataSendState2 == LOW;
    child2TotalLoad = *((unsigned int*)recvBuffer);
    child2DemandedLoad = *(((unsigned int*)recvBuffer) + 1);
    child2Prio =   *(((float*)recvBuffer) + 2*sizeof(int));
   }
-  dataSendState1  = LOW;
-  digitalWrite(dataSend1, dataSendState1);
-  dataSendState2  = LOW; 
-  digitalWrite(dataSend2, dataSendState2);
+//  dataSendState1  = LOW;
+///  digitalWrite(dataSend1, dataSendState1);
+//  dataSendState2  = LOW; 
+//  digitalWrite(dataSend2, dataSendState2);
 
 }
 /*
