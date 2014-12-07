@@ -16,9 +16,9 @@ Sketch for the leve0 of the setup */
 #define LOAD2_W   0x04
 #define LOAD3_W   0x05
 
-#define NODE_ADDRESS   0x02
+#define NODE_ADDRESS   0x03
 #define PARENT_ADDRESS 0x01
-#define BufferSize     0x04
+#define BufferSize     0x04   // child receives only asigned loads
 #define NUM_LOADS      0x03
 #define TOLERANCE      20U
 #define TIMEOUT        10U
@@ -26,7 +26,8 @@ Sketch for the leve0 of the setup */
 unsigned int led = 13;
 unsigned int ledState = LOW;
 unsigned int dataSend = 5;    // Signal to send data
-unsigned int recvData = 6;
+unsigned char I2CSendState = LOW;
+//unsigned int recvData = 6;
 char recvBuffer[BufferSize];
 
 
@@ -75,7 +76,7 @@ void toggleLED(){
 void setup(){
   pinMode(led,OUTPUT);
   pinMode(dataSend, INPUT);
-  pinMode(recvData, INPUT);
+ // pinMode(recvData, INPUT);
   LoadInit();
   Wire.begin(NODE_ADDRESS);
   Wire.onReceive(I2Cevent);
@@ -170,9 +171,15 @@ void cycComm(){
   Serial.print("Inside cycComm\n");
   #endif
   
+  if(LOW == digitalRead(dataSend)){
+    I2CSendState = LOW;
+  }
+  
    /* Cyclical comm handled during cyclically */
-   if(HIGH == digitalRead(dataSend)){
-     // we need to send data
+   if(HIGH == digitalRead(dataSend)&& (LOW == I2CSendState)){  // should send only one time
+      I2CSendState = HIGH;  // we will send data only on next level change on datasend pin
+    
+      // we need to send data
      Serial.print("Sending the data to Parent\n");
      Serial.print("Parent :");
      Serial.print(PARENT_ADDRESS);
@@ -350,7 +357,7 @@ void NodeTask(){
     cycComm();
     cycLogic();
     cycLoadWrite();   
-    debug();
+   // debug();
   
        
   #ifdef DEBUG
@@ -363,8 +370,9 @@ void NodeTask(){
 void loop(){
     digitalWrite(led, HIGH);
     NodeTask();
-    delay(100);
+    delay(1000);
     digitalWrite(led, LOW);
+    delay(1000);
    
 }
 
