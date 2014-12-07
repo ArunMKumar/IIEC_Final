@@ -291,26 +291,31 @@ void cycLogic(){
       if(loads[i].state == LOW){
         //if(NodeTotalLoad + loads[i].DCL  <= NodeAssignedLoad)  // we are in the safe zone
               //loads[i].ASL = loads[i].DCL;    // Keep this in check
+              
+              if(NodeLoadTotalLocal + loads[i].DCL < NodeAssignedLoad){
+                    loads[i].state = HIGH;
+              }
+              
               for(int j=0; j< NUM_LOADS; j++){
-                if((loads[i].dynPrio < loads[j].dynPrio) && (i != j)){
+                if((loads[i].dynPrio < loads[j].dynPrio)){
                   if(isLowestPrio(j)){
+                    if((NodeTotalLoad + loads[i].DCL) < NodeAssignedLoad){
                           loads[j].state = LOW;
                           NodeTotalLoad -= loads[j].DCL;
-                  }
-                  if((NodeTotalLoad + loads[i].DCL) < NodeAssignedLoad){
-                    loads[i].state = HIGH;
-                    NodeTotalLoad += loads[i].DCL;
+                          loads[i].state = HIGH;
+                          NodeTotalLoad += loads[i].DCL;
                   }
                 }
-              }
-          }       
+                }      
       
-  
+              }
+      }
+    }
   #ifdef DEBUG
   Serial.print("Exit cycLogic\n");
   #endif
-}  
 }
+
  
  
  void debug(){
@@ -367,13 +372,14 @@ void loop(){
                      ISR
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 void I2Cevent(int count){
-
+/*
   while(0 <= Wire.available()){
     for(int i =0; i< BufferSize; i++){
         recvBuffer[i] = Wire.read();
       }
   }
   NodeAssignedLoad = *((unsigned int*)recvBuffer);
+  */
 }
             
 
