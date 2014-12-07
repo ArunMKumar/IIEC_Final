@@ -3,7 +3,7 @@ Sketch for the leve0 of the setup */
 
 #include <Wire.h>
 
-//#define DEBUG
+#define DEBUG
 #define FALSE      0
 #define TRUE       1
 #define LOAD0_R   A0
@@ -80,6 +80,7 @@ void setup(){
   LoadInit();
   Wire.begin(NODE_ADDRESS);
   Wire.onReceive(I2Cevent);
+//  attachInterrupt(0, HWint, RISING);
   Serial.begin(9600);
 }
 
@@ -108,7 +109,7 @@ void sendWord(unsigned int data){
   Wire.write(*c);
   Wire.write(*(c+1));
   Serial.print(*c, DEC); Serial.print(" ");
-   Serial.print(*(c +1), DEC); Serial.print("\n");
+  Serial.print(*(c +1), DEC); Serial.print("\n");
 }
 
 /*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -170,8 +171,9 @@ void cycComm(){
   #endif
   Serial.print("\n============================================\n");
   if(LOW == digitalRead(dataSend)){
+     Serial.print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
     Serial.print("\n Setting datasend1 Low\n");
-    I2CSendState = LOW;
+   I2CSendState = LOW;
   }
   
    /* Cyclical comm handled during cyclically */
@@ -179,8 +181,8 @@ void cycComm(){
       I2CSendState = HIGH;  // we will send data only on next level change on datasend pin
       Serial.print("\n Setting datasend1 HIGH\n");
     
-      // we need to send data
-     Serial.print("Sending the data to Parent\n");
+      // we need to send data/     
+      Serial.print("Sending the data to Parent\n");
      Serial.print("Parent :");
      Serial.print(PARENT_ADDRESS);
      Serial.print("\n");
@@ -364,7 +366,7 @@ void NodeTask(){
 
 
 void loop(){
-    digitalWrite(led, HIGH);
+    //digitalWrite(led, HIGH);
     NodeTask();
     //delay(1000);
     //digitalWrite(led, LOW);
