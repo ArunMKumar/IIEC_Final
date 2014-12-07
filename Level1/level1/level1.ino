@@ -5,22 +5,23 @@ Data to child sent over I2C, data to parent sent over bluetooth
 
 #include <Wire.h>
 
-
+#define DEBUG
 #define NODE_ADDRESS   0x01
 //#define PARENT_ADDRESS 0x00
 #define BufferSize     0x0A
 #define child1Addr     0x02
 #define child2Addr     0x03
-#define Commduration   50
+#define CommdurationH   300
+#define CommdurationL   300
 
-unsigned int led = 13;
+unsigned int I2Cled = 13;
 unsigned int ledState = LOW;
-unsigned int dataSend1 = 12;    // Signal to send data slave1
+unsigned int dataSend1 = 5;    // Signal to send data slave1
 unsigned int dataSend2 = 6;    // signal to send data slave2
 unsigned char dataSendState1 = LOW;
 unsigned char dataSendState2 = HIGH;
 
-unsigned int recvData = 6;
+//unsigned int recvData = 6;
 char recvBuffer[BufferSize];
 
 unsigned int child1TotalLoad = 0; 
@@ -30,12 +31,11 @@ unsigned int child2TotalLoad = 0;
 unsigned int child2DemandedLoad = 0; 
 float  child2Prio = 3.0; 
 
-
 unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
 unsigned int NodeAssignedLoad = 1234;
 float NodePrio = 12.34; 
-
+/*
 void toggleLED(){
   if(HIGH == ledState){
     ledState = LOW;
@@ -44,14 +44,15 @@ void toggleLED(){
     ledState = HIGH;
     digitalWrite(led, ledState);
 }
+*/
 
 
 
 void setup(){
-  pinMode(led,OUTPUT);
+  pinMode(I2Cled,OUTPUT);
   pinMode(dataSend1, OUTPUT);
   pinMode(dataSend2, OUTPUT);
-  pinMode(recvData, INPUT);
+//  pinMode(recvData, INPUT);
   Wire.begin(NODE_ADDRESS);
   Wire.onReceive(receiveEvent);
   Serial.begin(9600);
@@ -65,17 +66,29 @@ void setup(){
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 
 void sendFloat(float data){
+  #ifdef DEBUG
+  Serial.print("Inside send Float\n");
+  #endif
   char *c = (char*)&data; 
   Wire.write(*c);
   Wire.write(*(c+1));
   Wire.write(*(c+2));
   Wire.write(*(c+3));
+  #ifdef DEBUG
+  Serial.print("Exit send Float\n");
+  #endif
 }
 
 void sendWord(unsigned int data){
+  #ifdef DEBUG
+  Serial.print("Inside send Word\n");
+  #endif
   char *c = (char*)&data; 
   Wire.write(*c);
   Wire.write(*(c+1));
+  #ifdef DEBUG
+  Serial.print("Exit send Word\n");
+  #endif
 }
 
 
@@ -83,6 +96,10 @@ void sendWord(unsigned int data){
                       Cyclic Task
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 void cycLoadCalc(){
+  #ifdef DEBUG
+  Serial.print("Inside cycLoadCalc\n");
+  #endif
+  
   NodeTotalLoad = child1TotalLoad + child2TotalLoad;
   NodeTotalDemand = child1DemandedLoad + child2DemandedLoad;
    Serial.print("Tload:");
@@ -91,9 +108,18 @@ void cycLoadCalc(){
     Serial.print("Dload:");
    Serial.print(NodeTotalDemand);
    Serial.print("\n");
+   
+  #ifdef DEBUG
+  Serial.print("Exit cycLoadCalc\n");
+  #endif
 }
 
 void cycPrioCalc(){
+  
+  #ifdef DEBUG
+  Serial.print("Inside cycPrioCalc\n");
+  #endif
+  
   float sum = 0.0, product = 1.0;
   
   sum = child1Prio + child2Prio;
@@ -103,92 +129,105 @@ void cycPrioCalc(){
    Serial.print("Prio:");
    Serial.print(NodePrio);
    Serial.print("\n");
+   
+  #ifdef DEBUG
+  Serial.print("Exit cycPrioCalc\n");
+  #endif
 }
 
 void cycComm(){
   
-  Serial.print("Pulling 1 high \n");
+  #ifdef DEBUG
+  Serial.print("Inside cycComm\n");
+  #endif
   
-  while(dataSendState1 == LOW){
-    // request data from slave1
-  //  Serial.print("Inside DataSend 1\n");
-   //   Serial.print("DataSend1  : ");
-  //  Serial.print(dataSendState1);
-  //  Serial.print("\n");
-    
+ 
+  if(dataSendState1 == LOW){
+  
       dataSendState1 = HIGH;
-      //   Serial.print("DataSend1  : ");
-  //  Serial.print(dataSendState1);
- //   Serial.print("\n");
-    
+      Serial.print("Pulling 1 high \n");
       digitalWrite(dataSend1, dataSendState1);
-   //    Serial.print("Waait for I2C\n");
-      delay(Commduration);  // hold it high so that slave sends data
-      //if(dataSendState1 == LOW) break;
+      delay(CommdurationH);
+      dataSendState1 =LOW;   // pull the line low now
+      digitalWrite(dataSend1, dataSendState1);
+      delay(CommdurationL);    
+      Serial.print("Pulling 1 LOW \n");
   } 
-  dataSendState1 =LOW;   // remove afterwards
-  digitalWrite(dataSend1, dataSendState1); // remove afterwads 
-  Serial.print("Pulling 1 LOW \n");
-  /*
-  while(dataSendState2 == LOW){
-    // request data from slave1
-      dataSendState1 = HIGH;
-      digitalWrite(dataSend1, dataSendState2);
-      delay(10);  // hold it high so that slave sends data
-       if(dataSendState2 == LOW) break;
-  }*/ 
+  
+
+   if(dataSendState2 == LOW){
+  
+      dataSendState2 = HIGH;
+      Serial.print("Pulling 2 high \n");
+      digitalWrite(dataSend2, dataSendState2);
+      delay(CommdurationH);
+      dataSendState2 =LOW;   // pull the line low now
+      digitalWrite(dataSend2, dataSendState2);
+      delay(CommdurationL);    
+      Serial.print("Pulling 2 LOW \n");
+  } 
+  
+  #ifdef DEBUG
+  Serial.print("Exit cycComm\n");
+  #endif
 }
 
-void SerialDEbug(){
-  
+void debug(){
+   #ifdef DEBUG
+  Serial.print("Inside Debug \n");
+  #endif
+  Serial.print("\n==============================================================================\n");
   Serial.print("child1TotalLoad :");
-  Serial.print(child1TotalLoad);
+  Serial.print(child1TotalLoad, DEC);
   Serial.print("   child1DemandedLoad :");
-  Serial.print(child1DemandedLoad);
+  Serial.print(child1DemandedLoad, DEC);
   Serial.print("   child1Prio :");
   Serial.print(child1Prio);
   
   Serial.print("\nchild2TotalLoad :");
-  Serial.print(child2TotalLoad);
+  Serial.print(child2TotalLoad, DEC);
   Serial.print("    child2DemandedLoad :");
-  Serial.print(child2DemandedLoad);
+  Serial.print(child2DemandedLoad,DEC);
   Serial.print("   child2Prio :");
-  Serial.print(child2Prio)
+  Serial.print(child2Prio);
+
+  Serial.print("\n==============================================================================\n");
   
-   Serial.print("child1TotalLoad :");
-  Serial.print(child1TotalLoad);
-  Serial.print("   child1DemandedLoad :");
-  Serial.print(child1DemandedLoad);
-  Serial.print("   child1Prio :");
-  Serial.print(child1Prio);
+  #ifdef DEBUG
+  Serial.print("Exit Debug \n");
+  #endif
+}
 
 
-unsigned int NodeTotalLoad = 1234;
-unsigned int NodeTotalDemand = 1234;
-unsigned int NodeAssignedLoad = 1234;
-float NodePrio = 12.34; 
   
 void NodeTask(){
-  /*
-    Cyclic Task to be executed by the Node
-    */
-    //cycLoadRead();
-   // Serial.print("Task Started \n");
-     cycLoadCalc();
+ #ifdef DEBUG
+  Serial.print("Inside NodeTask \n");
+  #endif
+  
+    cycLoadCalc();
     cycPrioCalc();
-   // Serial.print("Cyc Comm \n");
     cycComm();
-  //  Serial.print("Cyc Comm Exit \n");
-  //   Serial.print("Task Exited \n\n\n\n");
+    debug();
+    
+ #ifdef DEBUG
+  Serial.print("Exit NodeTask \n");
+  #endif
 }
 
 
 
 void loop(){
-    
+  #ifdef DEBUG
+  Serial.print("Inside loop \n");
+  #endif
     NodeTask();
-    Serial.write("Alive\n");
-    digitalWrite(led, LOW);
+    //Serial.write("Alive\n");
+   // delay(3000);
+    digitalWrite(I2Cled, LOW);
+  #ifdef DEBUG
+  Serial.print("Exit loop \n");
+  #endif
    
 }
 
@@ -198,17 +237,17 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*
 
 void receiveEvent(int howMany){
  
-  digitalWrite(led, HIGH);
+  digitalWrite(I2Cled, HIGH);
   if(dataSendState1 == HIGH){
     while(0 < Wire.available()){
       for(int i =0; i< BufferSize; i++){
         recvBuffer[i] = Wire.read();
       }
     }
-    dataSendState1 == LOW;
+   dataSendState1 == LOW;
    child1TotalLoad = *((unsigned int*)recvBuffer);
    child1DemandedLoad = *(((unsigned int*)recvBuffer) + 1);
-   child1Prio =   *(((float*)recvBuffer) + 2*sizeof(int));
+   child1Prio =   *(((float*)recvBuffer) + 1);
   }
   
   // was child 2 requested

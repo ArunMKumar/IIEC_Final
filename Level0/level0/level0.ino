@@ -16,7 +16,7 @@ Sketch for the leve0 of the setup */
 #define LOAD2_W   0x04
 #define LOAD3_W   0x05
 
-#define NODE_ADDRESS   0x03
+#define NODE_ADDRESS   0x02
 #define PARENT_ADDRESS 0x01
 #define BufferSize     0x04   // child receives only asigned loads
 #define NUM_LOADS      0x03
@@ -27,7 +27,7 @@ unsigned int led = 13;
 unsigned int ledState = LOW;
 unsigned int dataSend = 5;    // Signal to send data
 unsigned char I2CSendState = LOW;
-//unsigned int recvData = 6;
+
 char recvBuffer[BufferSize];
 
 
@@ -76,7 +76,7 @@ void toggleLED(){
 void setup(){
   pinMode(led,OUTPUT);
   pinMode(dataSend, INPUT);
- // pinMode(recvData, INPUT);
+
   LoadInit();
   Wire.begin(NODE_ADDRESS);
   Wire.onReceive(I2Cevent);
@@ -88,23 +88,27 @@ void setup(){
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 
 void sendFloat(float data){
-  char *c = (char*)&data; 
-  Serial.write("Inside WriteFloat\n");
-  Serial.write("Writing : ");
-   Serial.print(*c, DEC);
-   Serial.print("\n");
-  /* 
+  unsigned char *c = (unsigned char*)&data; 
+  Serial.write("Writing Float : ");
   Wire.write(*c);
   Wire.write(*(c+1));
   Wire.write(*(c+2));
-  Wire.write(*(c+3));*/
-  Wire.write('h');
+  Wire.write(*(c+3));
+  
+   Serial.print(*c, DEC); Serial.print(" ");
+   Serial.print(*(c+1), DEC); Serial.print(" ");
+   Serial.print(*(c+2), DEC); Serial.print(" ");
+   Serial.print(*(c+3), DEC); Serial.print("\n");
 }
 
 void sendWord(unsigned int data){
-  char *c = (char*)&data; 
+  
+  Serial.print("Writing Word : ");
+  unsigned char *c = (unsigned char*)&data; 
   Wire.write(*c);
   Wire.write(*(c+1));
+  Serial.print(*c, DEC); Serial.print(" ");
+   Serial.print(*(c +1), DEC); Serial.print("\n");
 }
 
 /*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -117,11 +121,7 @@ void cycLoadRead(){
   NodeTotalLoad = 0;
   for(int i =0; i< NUM_LOADS; i++){
     loads[i].DCL = analogRead(loads[i].readPin);
-  /*  
-    Serial.print("Reading from : ");
-    Serial.print(loads[i].readPin);
-    Serial.print("\n");
-    */
+
     NodeTotalLoad += loads[i].DCL;
   }
  
@@ -136,8 +136,7 @@ void cycLoadWrite(){
  #endif
   
   for (int i=0; i<NUM_LOADS; i++){
-   // Serial.print("writing Load :"); Serial.print(loads[i].writePin); Serial.print("\n");
-   // Serial.print("STATE : "); Serial.print(loads[i].state, DEC); Serial.print("\n");
+
     digitalWrite(loads[i].writePin, loads[i].state);
   }
   
@@ -157,8 +156,7 @@ void cycLoadCalc(){
           NodeTotalLoad += loads[i].DCL;
     }
   }
- // Serial.print("Load Calc: \n");
-//  Serial.print("NodeTotalLoad : "); Serial.print(NodeTotalLoad); Serial.print("\n");
+
   #ifdef DEBUG
   Serial.print("Exit cycLoadCalc\n");
   #endif
@@ -172,12 +170,14 @@ void cycComm(){
   #endif
   
   if(LOW == digitalRead(dataSend)){
+    Serial.print("\n Setting datasend1 Low\n");
     I2CSendState = LOW;
   }
   
    /* Cyclical comm handled during cyclically */
    if(HIGH == digitalRead(dataSend)&& (LOW == I2CSendState)){  // should send only one time
       I2CSendState = HIGH;  // we will send data only on next level change on datasend pin
+      Serial.print("\n Setting datasend1 HIGH\n");
     
       // we need to send data
      Serial.print("Sending the data to Parent\n");
@@ -187,13 +187,12 @@ void cycComm(){
      Wire.beginTransmission(PARENT_ADDRESS);
   
      sendWord(NodeTotalLoad);
+     Serial.print("Total Load written sent\n");
      sendWord(NodeTotalDemand);
+     Serial.print("Total Demand Written\n");
      sendFloat(NodePrio);
-     Serial.print("Float sent\n");
-     Wire.write('H');
-     Serial.print(NodePrio);
-     Serial.print("\n");
- 
+     Serial.print("Prio Written :\n");
+
      Wire.endTransmission();
      Serial.print("Sent the data to Parent\n");
    }
@@ -230,11 +229,9 @@ void cycPrioCalc(){
     }
     // CAlculate the priority of the node
     sum += loads[i].dynPrio;
-     // Serial.print(sum);
-    // Serial.print("\n");
+
     product *= loads[i].dynPrio;
-   // Serial.print(product);
-   //  Serial.print("\n");
+
   }
    NodePrio = product/sum;
    
@@ -247,15 +244,12 @@ unsigned char isLowestPrio(int index){
     // check if the mentioned node has the highest PRIORITY
     for(int i =0; i< NUM_LOADS; i++){
       if(loads[i].state == HIGH){
-      //  Serial.print("\nComparing "); Serial.print(loads[i].dynPrio); Serial.print(" > " ); Serial.print(loads[index].dynPrio);
-        if(loads[i].dynPrio > loads[index].dynPrio){
-        //  Serial.print("High one found\n");
-          
+         if(loads[i].dynPrio > loads[index].dynPrio){
           return FALSE;
         }
       }
     }
-    //Serial.print("returnning TRUE\n");
+   
      return TRUE; 
 }
 
@@ -266,7 +260,7 @@ void cycLogic(){
   unsigned char timeout = 0;
   unsigned int NodeLoadTotalLocal = 0;
   // TO switch the lods off
-//  Serial.print("\nComparing "); Serial.print(NodeTotalLoad); Serial.print(" > " ); Serial.print(NodeAssignedLoad);
+
   if(NodeTotalLoad > NodeAssignedLoad){
     
       while(NodeTotalLoad > NodeAssignedLoad){
@@ -274,12 +268,8 @@ void cycLogic(){
           timeout++;
           for(int i =0; i<NUM_LOADS; i++){
            // is this the lowest priority
-          if(loads[i].state == HIGH){
-          
-               // Serial.print("Somewone SHOULD going down\n");
-          
+          if(loads[i].state == HIGH){          
             if(isLowestPrio(i)){
-               // Serial.print("Somewone is going down\n");
             loads[i].state = LOW;
             NodeTotalLoad -= loads[i].DCL;
          }
@@ -338,7 +328,10 @@ void cycLogic(){
      
      Serial.print("Node Data: \n");
      Serial.print("NodeTotalLoad : "); Serial.print(NodeTotalLoad); Serial.print("\n");
+     Serial.print("NodeTotalDemand : "); Serial.print(NodeTotalDemand); Serial.print("\n");
      Serial.print("NodeAssignedLoad : "); Serial.print(NodeAssignedLoad); Serial.print("\n");
+     Serial.print("NodePrio : "); Serial.print(NodePrio); Serial.print("\n");
+     Serial.print("=======================================================");
  } 
   
 void NodeTask(){
@@ -357,7 +350,7 @@ void NodeTask(){
     cycComm();
     cycLogic();
     cycLoadWrite();   
-   // debug();
+   debug();
   
        
   #ifdef DEBUG
@@ -370,9 +363,9 @@ void NodeTask(){
 void loop(){
     digitalWrite(led, HIGH);
     NodeTask();
-    delay(1000);
-    digitalWrite(led, LOW);
-    delay(1000);
+    //delay(1000);
+    //digitalWrite(led, LOW);
+    //delay(1000);
    
 }
 
@@ -380,14 +373,14 @@ void loop(){
                      ISR
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 void I2Cevent(int count){
-/*
+
   while(0 <= Wire.available()){
     for(int i =0; i< BufferSize; i++){
         recvBuffer[i] = Wire.read();
       }
   }
   NodeAssignedLoad = *((unsigned int*)recvBuffer);
-  */
+  
 }
             
 
