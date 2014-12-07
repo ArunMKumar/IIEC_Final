@@ -14,8 +14,10 @@ Data to child sent over I2C, data to parent sent over bluetooth
 #define CommdurationH   300
 #define CommdurationL   300
 
+static unsigned int I2CCount = 0;
+
 unsigned int I2Cled = 13;
-unsigned int ledState = LOW;
+unsigned int I2CledState = LOW;
 unsigned int dataSend1 = 5;    // Signal to send data slave1
 unsigned int dataSend2 = 6;    // signal to send data slave2
 unsigned char dataSendState1 = LOW;
@@ -35,16 +37,16 @@ unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
 unsigned int NodeAssignedLoad = 1234;
 float NodePrio = 12.34; 
-/*
+
 void toggleLED(){
-  if(HIGH == ledState){
-    ledState = LOW;
+  if(HIGH == I2CledState){
+    I2CledState = LOW;
   }
   else
-    ledState = HIGH;
-    digitalWrite(led, ledState);
+    I2CledState = HIGH;
+    digitalWrite(I2Cled, I2CledState);
 }
-*/
+
 
 
 
@@ -190,6 +192,10 @@ void debug(){
   Serial.print(child2DemandedLoad,DEC);
   Serial.print("   child2Prio :");
   Serial.print(child2Prio);
+  
+  Serial.print("I2CCount : ");
+  Serial.print(I2CCount, DEC);
+  Serial.print("\n");
 
   Serial.print("\n==============================================================================\n");
   
@@ -224,7 +230,7 @@ void loop(){
     NodeTask();
     //Serial.write("Alive\n");
    // delay(3000);
-    digitalWrite(I2Cled, LOW);
+   // digitalWrite(I2Cled, LOW);
   #ifdef DEBUG
   Serial.print("Exit loop \n");
   #endif
@@ -237,7 +243,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*
 
 void receiveEvent(int howMany){
  
-  digitalWrite(I2Cled, HIGH);
+  toggleLED();
+  I2CCount++;
   if(dataSendState1 == HIGH){
     while(0 < Wire.available()){
       for(int i =0; i< BufferSize; i++){

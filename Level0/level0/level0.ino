@@ -168,7 +168,7 @@ void cycComm(){
    #ifdef DEBUG
   Serial.print("Inside cycComm\n");
   #endif
-  
+  Serial.print("\n============================================\n");
   if(LOW == digitalRead(dataSend)){
     Serial.print("\n Setting datasend1 Low\n");
     I2CSendState = LOW;
@@ -197,6 +197,9 @@ void cycComm(){
      Serial.print("Sent the data to Parent\n");
    }
    
+   
+   Serial.print("\n\nI2CSendState : "); Serial.print(I2CSendState, DEC); Serial.print("\n");
+   Serial.print("\n============================================\n");
   #ifdef DEBUG
   Serial.print("Exit cycComm\n");
   #endif
@@ -350,7 +353,7 @@ void NodeTask(){
     cycComm();
     cycLogic();
     cycLoadWrite();   
-   debug();
+   //debug();
   
        
   #ifdef DEBUG
