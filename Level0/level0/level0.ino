@@ -170,14 +170,14 @@ void cycComm(){
   Serial.print("Inside cycComm\n");
   #endif
   Serial.print("\n============================================\n");
-  if(LOW == digitalRead(dataSend)){
-     Serial.print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
-    Serial.print("\n Setting datasend1 Low\n");
-   I2CSendState = LOW;
-  }
+//  if(LOW == digitalRead(dataSend)){
+//     Serial.print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+//    Serial.print("\n Setting datasend1 Low\n");
+//   I2CSendState = LOW;
+//  }
   
    /* Cyclical comm handled during cyclically */
-   if(HIGH == digitalRead(dataSend)&& (LOW == I2CSendState)){  // should send only one time
+ //  if(HIGH == digitalRead(dataSend)&& (LOW == I2CSendState)){  // should send only one time
       I2CSendState = HIGH;  // we will send data only on next level change on datasend pin
       Serial.print("\n Setting datasend1 HIGH\n");
     
@@ -197,7 +197,7 @@ void cycComm(){
 
      Wire.endTransmission();
      Serial.print("Sent the data to Parent\n");
-   }
+ //  }
    
    
    Serial.print("\n\nI2CSendState : "); Serial.print(I2CSendState, DEC); Serial.print("\n");
@@ -355,7 +355,8 @@ void NodeTask(){
     cycComm();
     cycLogic();
     cycLoadWrite();   
-   //debug();
+    toggleLED();
+    //debug();
   
        
   #ifdef DEBUG

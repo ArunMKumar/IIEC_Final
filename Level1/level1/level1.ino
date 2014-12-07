@@ -142,7 +142,7 @@ void cycComm(){
   #ifdef DEBUG
   Serial.print("Inside cycComm\n");
   #endif
-  
+ /* 
  
   if(dataSendState1 == LOW){
   
@@ -167,7 +167,7 @@ void cycComm(){
       digitalWrite(dataSend2, dataSendState2);
       delay(CommdurationL);    
       Serial.print("Pulling 2 LOW \n");
-  } 
+  } */
   
   #ifdef DEBUG
   Serial.print("Exit cycComm\n");
@@ -193,7 +193,7 @@ void debug(){
   Serial.print("   child2Prio :");
   Serial.print(child2Prio);
   
-  Serial.print("I2CCount : ");
+  Serial.print("\nI2CCount : ");
   Serial.print(I2CCount, DEC);
   Serial.print("\n");
 
@@ -245,26 +245,27 @@ void receiveEvent(int howMany){
  
   toggleLED();
   I2CCount++;
-  if(dataSendState1 == HIGH){
     while(0 < Wire.available()){
       for(int i =0; i< BufferSize; i++){
         recvBuffer[i] = Wire.read();
       }
     }
   // dataSendState1 == LOW;
-   child1TotalLoad = *((unsigned int*)recvBuffer);
-   child1DemandedLoad = *(((unsigned int*)recvBuffer) + 1);
-   child1Prio =   *(((float*)recvBuffer) + 1);
+  if(recvBuffer[0] = 0x02){
+   child1TotalLoad = *((unsigned int*)&recvBuffer[1]);
+   child1DemandedLoad = *(((unsigned int*)&recvBuffer[1]) + 1);
+   child1Prio =   *(((float*)&recvBuffer[1]) + 1);
   }
   
-  // was child 2 requested
+/*  // was child 2 requested
   if(dataSendState2 == HIGH){
     while(0 < Wire.available()){
       for(int i =0; i< BufferSize; i++){
         recvBuffer[i] = Wire.read();
       }
-    }
+    }*/
    // dataSendState2 == LOW;
+    if(recvBuffer[0] = 0x02){
    child2TotalLoad = *((unsigned int*)recvBuffer);
    child2DemandedLoad = *(((unsigned int*)recvBuffer) + 1);
    child2Prio =   *(((float*)recvBuffer) + 2*sizeof(int));
