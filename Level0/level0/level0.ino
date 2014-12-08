@@ -103,13 +103,13 @@ void setup(){
                       Conversions Task
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 
-void sendFloat(float data){
+void sendFloat(float data, SoftwareSerial* parent){
   unsigned char *c = (unsigned char*)&data; 
   Serial.write("Writing Float : ");
-  Wire.write(*c);
-  Wire.write(*(c+1));
-  Wire.write(*(c+2));
-  Wire.write(*(c+3));
+  parent->write(*c);
+  parent->write(*(c+1));
+  parent->write(*(c+2));
+  parent->write(*(c+3));
   
    Serial.print(*c, DEC); Serial.print(" ");
    Serial.print(*(c+1), DEC); Serial.print(" ");
@@ -117,12 +117,12 @@ void sendFloat(float data){
    Serial.print(*(c+3), DEC); Serial.print("\n");
 }
 
-void sendWord(unsigned int data){
+void sendWord(unsigned int data, SoftwareSerial* parent){
   
   Serial.print("Writing Word : ");
   unsigned char *c = (unsigned char*)&data; 
-  Wire.write(*c);
-  Wire.write(*(c+1));
+  parent->write(*c);
+  parent->write(*(c+1));
   Serial.print(*c, DEC); Serial.print(" ");
   Serial.print(*(c +1), DEC); Serial.print("\n");
 }
@@ -203,18 +203,18 @@ void cycComm(){
      Serial.print("Parent :");
      Serial.print(PARENT_ADDRESS);
      Serial.print("\n");
-     Wire.beginTransmission(PARENT_ADDRESS);
+  //   Wire.beginTransmission(PARENT_ADDRESS);
      
-     Wire.write(NODE_ADDRESS);
+ //    Wire.write(NODE_ADDRESS);
      Serial.print("ID sent\n");
-     sendWord(NodeTotalLoad);
+     sendWord(NodeTotalLoad, &parent);
      Serial.print("Total Load written sent\n");
-     sendWord(NodeTotalDemand);
+     sendWord(NodeTotalDemand, &parent);
      Serial.print("Total Demand Written\n");
-     sendFloat(NodePrio);
+     sendFloat(NodePrio, &parent);
      Serial.print("Prio Written :\n");
 
-     Wire.endTransmission();
+   //  Wire.endTransmission();
      Serial.print("Sent the data to Parent\n");
   }
    
