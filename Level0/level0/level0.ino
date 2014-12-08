@@ -19,8 +19,8 @@ Sketch for the leve0 of the setup */
 
 #define NODE_ADDRESS   0x02
 #define SEND_DATA      72U
-#define PARENT_RX      0x05
-#define PARENT_TX      0x06
+#define PARENT_RX      0x06
+#define PARENT_TX      0x07
 #define PARENT_ADDRESS 0x01
 #define BufferSize     0x0A   // child receives only asigned loads
 #define NUM_LOADS      0x03
@@ -104,13 +104,13 @@ void setup(){
                       Conversions Task
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 
-void sendFloat(float data, SoftwareSerial* parent){
+void sendFloat(float data, SoftwareSerial parent){
   unsigned char *c = (unsigned char*)&data; 
   Serial.write("Writing Float : ");
-  parent->write(*c);
-  parent->write(*(c+1));
-  parent->write(*(c+2));
-  parent->write(*(c+3));
+  parent.write(*c);
+  parent.write(*(c+1));
+  parent.write(*(c+2));
+  parent.write(*(c+3));
   
    Serial.print(*c, DEC); Serial.print(" ");
    Serial.print(*(c+1), DEC); Serial.print(" ");
@@ -118,12 +118,12 @@ void sendFloat(float data, SoftwareSerial* parent){
    Serial.print(*(c+3), DEC); Serial.print("\n");
 }
 
-void sendWord(unsigned int data, SoftwareSerial* parent){
+void sendWord(unsigned int data, SoftwareSerial parent){
   
   Serial.print("Writing Word : ");
   unsigned char *c = (unsigned char*)&data; 
-  parent->write(*c);
-  parent->write(*(c+1));
+  parent.write(*c);
+  parent.write(*(c+1));
   Serial.print(*c, DEC); Serial.print(" ");
   Serial.print(*(c +1), DEC); Serial.print("\n");
 }
@@ -208,11 +208,11 @@ void cycComm(){
      
  //    Wire.write(NODE_ADDRESS);
      Serial.print("ID sent\n");
-     sendWord(NodeTotalLoad, &parent);
+     sendWord(NodeTotalLoad, parent);
      Serial.print("Total Load written sent\n");
-     sendWord(NodeTotalDemand, &parent);
+     sendWord(NodeTotalDemand, parent);
      Serial.print("Total Demand Written\n");
-     sendFloat(NodePrio, &parent);
+     sendFloat(NodePrio, parent);
      Serial.print("Prio Written :\n");
       dataSendState = HIGH; //we should not sent data continuously
    //  Wire.endTransmission();

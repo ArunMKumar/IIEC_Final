@@ -306,21 +306,24 @@ void cycListen(){
   static int i=0,j=0;
   
   if(child1.available()){
-    Serial.print("ParentReceived Something\n");
+    Serial.print("ParentReceived Something from child 1\n");
     while(child1.available()){
       recvBuffer1[i] = child1.read();
       i++;
     }
   }
+  Serial.print("\ni: ");Serial.print(i, DEC); Serial.print(" ");
   
    if(child2.available()){
+     Serial.print("ParentReceived Something from child 2\n");
     while(child2.available()){
       recvBuffer2[i] = child1.read();
       j++;
     }
   }
+  Serial.print("\nj: ");Serial.print(i, DEC); Serial.print(" ");
   
-//  if(i == FRAME_SIZE){
+  if(i >= FRAME_SIZE){
     
     child1TotalLoad =*((unsigned int*)recvBuffer1[0]); 
     Serial.print("child1TotalLoad: ");Serial.print(child1TotalLoad, DEC); Serial.print(" ");
@@ -330,8 +333,8 @@ void cycListen(){
     Serial.print("child1Prio: ");Serial.print(child1Prio, DEC); Serial.print(" ");
     i = 0;
 
-//  }
-//  if(j == FRAME_SIZE){
+  }
+  if(j == FRAME_SIZE){
     child2TotalLoad =*((unsigned int*)recvBuffer2[0]); 
     child2DemandedLoad = *((unsigned int*)recvBuffer2[0]+ 1);  
     child2Prio = *((float*)recvBuffer2[0]+ 1);
@@ -341,7 +344,7 @@ void cycListen(){
     child1Prio = *((float*)recvBuffer1[0]+ 1);
     Serial.print("child1Prio: ");Serial.print(child2Prio, DEC); Serial.print(" ");
     j = 0;
-//  }
+  }
   
    #ifdef DEBUG
   Serial.print("Exit cyc Loisten \n");
