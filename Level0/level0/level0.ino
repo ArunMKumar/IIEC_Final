@@ -16,7 +16,7 @@ Sketch for the leve0 of the setup */
 #define LOAD2_W   0x04
 #define LOAD3_W   0x05
 
-#define NODE_ADDRESS   0x02
+#define NODE_ADDRESS   0x03
 #define PARENT_ADDRESS 0x01
 #define BufferSize     0x04   // child receives only asigned loads
 #define NUM_LOADS      0x03
@@ -187,7 +187,9 @@ void cycComm(){
      Serial.print(PARENT_ADDRESS);
      Serial.print("\n");
      Wire.beginTransmission(PARENT_ADDRESS);
-  
+     
+     Wire.write(NODE_ADDRESS);
+     Serial.print("ID sent\n");
      sendWord(NodeTotalLoad);
      Serial.print("Total Load written sent\n");
      sendWord(NodeTotalDemand);

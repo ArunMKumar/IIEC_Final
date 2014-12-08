@@ -22,6 +22,7 @@ unsigned int dataSend1 = 5;    // Signal to send data slave1
 unsigned int dataSend2 = 6;    // signal to send data slave2
 unsigned char dataSendState1 = LOW;
 unsigned char dataSendState2 = LOW;
+unsigned int childAssignedLoad = 0x00;
 
 //unsigned int recvData = 6;
 char recvBuffer[BufferSize];
@@ -29,14 +30,18 @@ char recvBuffer[BufferSize];
 unsigned int child1TotalLoad = 0; 
 unsigned int child1DemandedLoad = 0; 
 float  child1Prio = 3.0; 
+unsigned int child1AssignedLoad = 0;
+
 unsigned int child2TotalLoad = 0; 
 unsigned int child2DemandedLoad = 0; 
 float  child2Prio = 3.0; 
+unsigned int child2AssignedLoad =0;
 
 unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
-unsigned int NodeAssignedLoad = 1234;
+//unsigned int NodeAssignedLoad = 1234;
 float NodePrio = 12.34; 
+unsigned int NodeReserve = 0;
 
 void toggleLED(){
   if(HIGH == I2CledState){
@@ -115,6 +120,63 @@ void cycLoadCalc(){
   Serial.print("Exit cycLoadCalc\n");
   #endif
 }
+
+void transmitAssignedLoad(){
+  #ifdef DEBUG
+  Serial.begin("Inside transmitAssignedLoad \n");
+  #endif
+  
+  Wire.beginTransmission(child1Addr);
+  sendWord(child1AssignedLoad);
+  Wire.endTransmission();
+  
+  Wire.beginTransmission(child2Addr);
+  sendWord(child2AssignedLoad);
+  Wire.endTransmission();
+  
+  #ifdef DEBUG
+  Serial.print("Exit transmitAssignedLoad \n");
+  #endif
+}
+  
+
+void cycAssignedLoadCalc(){
+  #ifdef DEBUG
+  Serial.print("Inside cycAssigned Load Calc\n");
+  #endif
+  /*
+  The loads to be assigned to the childs 
+  */
+  childAssignedLoad = analogRead(A0) * 6;  // for six loads in this project
+  
+  if(NodeTotalDemand < childAssignedLoad){
+    child1AssignedLoad = child1DemandedLoad;
+    child2AssignedLoad = child2DemandedLoad;
+    NodeReserve = childAssignedLoad -NodeTotalDemand ;
+  }
+  
+   if(NodeTotalDemand > childAssignedLoad){
+    if(child1Prio < child2Prio){
+        child1AssignedLoad = child1DemandedLoad;
+        childAssignedLoad -= child1AssignedLoad;
+        child2AssignedLoad = childAssignedLoad;
+        NodeReserve = 0;
+    }
+    else{
+        child2AssignedLoad = child2DemandedLoad;
+        childAssignedLoad -= child2AssignedLoad;
+        child1AssignedLoad = childAssignedLoad;
+       NodeReserve = 0; 
+    }
+   }
+    
+    transmitAssignedLoad();
+  #ifdef DEBUG
+  Serial.print("exit cycAssigned Load Calc\n");
+  #endif
+      
+}
+
 
 void cycPrioCalc(){
   
@@ -213,7 +275,8 @@ void NodeTask(){
   
     cycLoadCalc();
     cycPrioCalc();
-    cycComm();
+   // cycComm();
+    cycAssignedLoadCalc();
     debug();
     
  #ifdef DEBUG
@@ -265,7 +328,7 @@ void receiveEvent(int howMany){
       }
     }*/
    // dataSendState2 == LOW;
-    if(recvBuffer[0] = 0x02){
+    if(recvBuffer[0] = 0x03){
    child2TotalLoad = *((unsigned int*)recvBuffer);
    child2DemandedLoad = *(((unsigned int*)recvBuffer) + 1);
    child2Prio =   *(((float*)recvBuffer) + 2*sizeof(int));
