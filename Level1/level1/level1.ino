@@ -8,9 +8,9 @@ Data to child sent over I2C, data to parent sent over bluetooth
 
 
 
-//#define DEBUG
+#define DEBUG
 #define NODE_ADDRESS   0x01
-#define SEND_DATA      0xAA
+#define SEND_DATA      72U
 #define CHILD1RX       0x02
 #define CHILD1TX       0x03
 #define CHILD2RX       0x04
@@ -65,7 +65,7 @@ void toggleLED(){
     aliveLEDState = LOW;
   }
   else
-    I2CledState = HIGH;
+    aliveLEDState = HIGH;
     digitalWrite(aliveLED, aliveLEDState);
 }
 
@@ -81,6 +81,10 @@ void setup(){
 //  Wire.begin(NODE_ADDRESS);
 //  Wire.onReceive(receiveEvent);
   Serial.begin(9600);
+  child1.begin(9600);
+  child2.begin(9600);
+  child1.print("Hello World");
+  child2.print("Hello World");
   Serial.print("Node_Address :");
   Serial.print(NODE_ADDRESS);
   Serial.print("\n");
@@ -140,9 +144,9 @@ void cycLoadCalc(){
 }
 
 void transmitAssignedLoad(SoftwareSerial* child1, SoftwareSerial* child2){
- // #ifdef DEBUG
+  #ifdef DEBUG
   Serial.print("Inside transmitAssignedLoad \n");
-  //#endif
+  #endif
    Serial.print("Sending to child1 \n");
  // Wire.beginTransmission(child1Addr);
   sendWord(child1AssignedLoad, child1);
@@ -165,18 +169,18 @@ void cycAssignedLoadCalc(){
   Serial.print("Inside cycAssigned Load Calc\n");
   #endif
   
-  Serial.print("Here\n");
+//  Serial.print("Here\n");
   /*
   The loads to be assigned to the childs 
   */
   childAssignedLoad = analogRead(A0) * 6;  // for six loads in this project
-   Serial.print("Here1\n");
+  // Serial.print("Here1\n");
   if(NodeTotalDemand < childAssignedLoad){
     child1AssignedLoad = child1DemandedLoad;
     child2AssignedLoad = child2DemandedLoad;
     NodeReserve = childAssignedLoad -NodeTotalDemand ;
   }
-   Serial.print("Here2\n");
+ //  Serial.print("Here2\n");
    if(NodeTotalDemand > childAssignedLoad){
     if(child1Prio < child2Prio){
         child1AssignedLoad = child1DemandedLoad;
@@ -191,7 +195,7 @@ void cycAssignedLoadCalc(){
        NodeReserve = 0; 
     }
    }
-     Serial.print("Here3\n");
+    // Serial.print("Here3\n");
     transmitAssignedLoad(&child1, &child2);
   #ifdef DEBUG
   Serial.print("exit cycAssigned Load Calc\n");
@@ -231,7 +235,8 @@ void cycComm(){
   Serial.print("\nchild2DataReq :");
   Serial.print(child2DataReq, DEC);
   Serial.print("\n");
- 
+ child1.write(SEND_DATA); // ----------- Temp
+ child2.write(SEND_DATA);
   if(child1DataReq == LOW){
   
       child1DataReq = HIGH;
@@ -266,7 +271,7 @@ void debug(){
    #ifdef DEBUG
   Serial.print("Inside Debug \n");
   #endif
-  Serial.print("\n==============================================================================\n");
+  Serial.print("\n=================================PARENT=============================================\n");
   Serial.print("child1TotalLoad :");
   Serial.print(child1TotalLoad, DEC);
   Serial.print("   child1DemandedLoad :");
@@ -296,11 +301,12 @@ void cycListen(){
   /*
   here we receive data from the child*/
   #ifdef DEBUG
-  Serial.print("Inside cyc Loisten \n");
+  Serial.print("Inside cyc Listen \n");
   #endif
   static int i=0,j=0;
   
   if(child1.available()){
+    Serial.print("ParentReceived Something\n");
     while(child1.available()){
       recvBuffer1[i] = child1.read();
       i++;
@@ -314,19 +320,28 @@ void cycListen(){
     }
   }
   
-  if(i == FRAME_SIZE){
+//  if(i == FRAME_SIZE){
     
     child1TotalLoad =*((unsigned int*)recvBuffer1[0]); 
+    Serial.print("child1TotalLoad: ");Serial.print(child1TotalLoad, DEC); Serial.print(" ");
     child1DemandedLoad = *((unsigned int*)recvBuffer1[0]+ 1);  
+    Serial.print("child1DemandedLoad: ");Serial.print(child1DemandedLoad, DEC); Serial.print(" ");
     child1Prio = *((float*)recvBuffer1[0]+ 1);
+    Serial.print("child1Prio: ");Serial.print(child1Prio, DEC); Serial.print(" ");
     i = 0;
-  }
-  if(j == FRAME_SIZE){
+
+//  }
+//  if(j == FRAME_SIZE){
     child2TotalLoad =*((unsigned int*)recvBuffer2[0]); 
     child2DemandedLoad = *((unsigned int*)recvBuffer2[0]+ 1);  
     child2Prio = *((float*)recvBuffer2[0]+ 1);
+    Serial.print("child1TotalLoad: ");Serial.print(child2TotalLoad, DEC); Serial.print(" ");
+    child1DemandedLoad = *((unsigned int*)recvBuffer1[0]+ 1);  
+    Serial.print("child1DemandedLoad: ");Serial.print(child2DemandedLoad, DEC); Serial.print(" ");
+    child1Prio = *((float*)recvBuffer1[0]+ 1);
+    Serial.print("child1Prio: ");Serial.print(child2Prio, DEC); Serial.print(" ");
     j = 0;
-  }
+//  }
   
    #ifdef DEBUG
   Serial.print("Exit cyc Loisten \n");

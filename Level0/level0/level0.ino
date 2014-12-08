@@ -18,6 +18,7 @@ Sketch for the leve0 of the setup */
 #define LOAD3_W   0x05
 
 #define NODE_ADDRESS   0x02
+#define SEND_DATA      72U
 #define PARENT_RX      0x05
 #define PARENT_TX      0x06
 #define PARENT_ADDRESS 0x01
@@ -92,10 +93,11 @@ void setup(){
  // pinMode(dataSend, INPUT);
 
   LoadInit();
-  Wire.begin(NODE_ADDRESS);
-  Wire.onReceive(I2Cevent);
+ // Wire.begin(NODE_ADDRESS);
+//  Wire.onReceive(I2Cevent);
 //  attachInterrupt(0, HWint, RISING);
   Serial.begin(9600);
+  parent.begin(9600);
 }
 
 /*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -193,7 +195,7 @@ void cycComm(){
 //  }
   
    /* Cyclical comm handled during cyclically */
- if((HIGH == parentDataReq)&& (LOW == dataSendState)){  // should send only one time
+// if((HIGH == parentDataReq)&& (LOW == dataSendState)){  // should send only one time
       //I2CSendState = HIGH;  // we will send data only on next level change on datasend pin
       Serial.print("\n Setting datasend1 HIGH\n");
     
@@ -215,10 +217,10 @@ void cycComm(){
       dataSendState = HIGH; //we should not sent data continuously
    //  Wire.endTransmission();
      Serial.print("Sent the data to Parent\n");
-  }
+//  }
    
    
-   Serial.print("\n\nI2CSendState : "); Serial.print(I2CSendState, DEC); Serial.print("\n");
+   Serial.print("\n\nI2CSendState : "); Serial.print(dataSendState, DEC); Serial.print("\n");
    Serial.print("\n============================================\n");
   #ifdef DEBUG
   Serial.print("Exit cycComm\n");
@@ -337,12 +339,13 @@ void cycLogic(){
 }
 
  void cycListen(){
-   #ifndef DEBUG
+   #ifdef DEBUG
    Serial.print("Inside cyc Listen\n");
    #endif
    
    static int i = 0;
    if(parent.available()){
+     Serial.print("\nChildReceived Something\n");
      while(parent.available()){
        recvBuffer[i] = parent.read();
      }
@@ -355,7 +358,7 @@ void cycLogic(){
    }
   }
   
-  #ifndef DEBUG
+  #ifdef DEBUG
    Serial.print("Exit cyc Listen\n");
   #endif 
  }
@@ -394,7 +397,8 @@ void NodeTask(){
     cycPrioCalc();
     cycComm();
     cycLogic();
-    cycLoadWrite();   
+    cycLoadWrite();
+    cycListen();   
     toggleLED();
     //debug();
   
