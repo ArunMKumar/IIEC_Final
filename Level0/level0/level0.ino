@@ -26,16 +26,16 @@ Sketch for the leve0 of the setup */
 #define TOLERANCE      20U
 #define TIMEOUT        10U
 
+SoftwareSerial parent(5,7);
+unsigned char  recvBuffer[BufferSize];
+unsigned int   aliveLED = 13;
+unsigned int   aliveLEDState = LOW;
+unsigned int   I2CLED  = 12;
+unsigned int   I2CLEDState = LOW;
+unsigned int   parentDataReq = LOW;    // Signal to send data
+unsigned char  dataSendState = LOW;
 
 unsigned char recvBuffer[BufferSize];
-unsigned int aliveLED = 13;
-unsigned int aliveLEDState = LOW;
-unsigned int I2CLED  = 12;
-unsigned int I2CLEDState = LOW;
-unsigned int dataSend = 5;    // Signal to send data
-unsigned char I2CSendState = LOW;
-
-char recvBuffer[BufferSize];
 unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
 unsigned int NodeAssignedLoad = 1230;
@@ -337,7 +337,27 @@ void cycLogic(){
   #endif
 }
 
- 
+ void cycListen(){
+   #ifndef DEBUG
+   Serial.print("Inside cyc Listen\n");
+   #endif
+   
+   static int i = 0;
+   if(parent.available()){
+     while(parent.available()){
+       recvBuffer[i] = parent.read();
+     }
+     i =0;
+   }
+   
+   if(recvBuffer[0] == SEND_DATA){
+       parentDataReq = HIGH;
+   }
+  
+  #ifndef DEBUG
+   Serial.print("Exit cyc Listen\n");
+  #endif 
+ }
  
  void debug(){
      #ifdef DEBUG

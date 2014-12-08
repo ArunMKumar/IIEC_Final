@@ -325,6 +325,7 @@ void cycListen(){
     child2TotalLoad =*((unsigned int*)recvBuffer2[0]); 
     child2DemandedLoad = *((unsigned int*)recvBuffer2[0]+ 1);  
     child2Prio = *((float*)recvBuffer2[0]+ 1);
+    j = 0;
   }
   
    #ifdef DEBUG
@@ -406,7 +407,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*
 //  dataSendState2  = LOW; 
 //  digitalWrite(dataSend2, dataSendState2);
 
-}
+//}
 /*
 void receiveEvent(int howMany)
 {
