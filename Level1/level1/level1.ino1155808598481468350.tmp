@@ -4,16 +4,9 @@ Data to child sent over I2C, data to parent sent over bluetooth
 */
 
 #include <Wire.h>
-#include <SoftwareSerial.h>
-
-SoftwareSerial.child1(
 
 //#define DEBUG
 #define NODE_ADDRESS   0x01
-#define CHILD1RX       0x02
-#define CHILD1TX       0x03
-#define CHILD2RX       0x04
-#define CHILD2TX       0x05
 //#define PARENT_ADDRESS 0x00
 #define BufferSize     0x0A
 #define child1Addr     0x02
@@ -21,14 +14,9 @@ SoftwareSerial.child1(
 #define CommdurationH   100
 #define CommdurationL   100
 
-
-SoftwareSerial.child1(CHILD1RX, CHILD1TX);
-SoftwareSerial.child1(CHILD2RX, CHILD3TX);
 static unsigned int I2CCount = 0;
 
-unsigned int aliveLED = 13;
-unsigned int aliveLEDState = LOW;
-unsigned int I2Cled = 12;
+unsigned int I2Cled = 13;
 unsigned int I2CledState = LOW;
 unsigned int dataSend1 = 5;    // Signal to send data slave1
 unsigned int dataSend2 = 6;    // signal to send data slave2
@@ -43,7 +31,6 @@ unsigned int child1TotalLoad = 0;
 unsigned int child1DemandedLoad = 0; 
 float  child1Prio = 3.0; 
 unsigned int child1AssignedLoad = 0;
-
 unsigned int child2TotalLoad = 0; 
 unsigned int child2DemandedLoad = 0; 
 float  child2Prio = 3.0; 
@@ -51,17 +38,17 @@ unsigned int child2AssignedLoad =0;
 
 unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
-//unsigned int NodeAssignedLoad = 1234;
+unsigned int NodeAssignedLoad = 1234;
 float NodePrio = 12.34; 
 unsigned int NodeReserve = 0;
 
 void toggleLED(){
-  if(HIGH == aliveLEDState){
-    aliveLEDState = LOW;
+  if(HIGH == I2CledState){
+    I2CledState = LOW;
   }
   else
     I2CledState = HIGH;
-    digitalWrite(aliveLED, aliveLEDState);
+    digitalWrite(I2Cled, I2CledState);
 }
 
 
@@ -69,7 +56,6 @@ void toggleLED(){
 
 void setup(){
   pinMode(I2Cled,OUTPUT);
-  pinMode(aliveLED, OUTPUT);
   pinMode(dataSend1, OUTPUT);
   pinMode(dataSend2, OUTPUT);
 //  pinMode(recvData, INPUT);
@@ -135,19 +121,17 @@ void cycLoadCalc(){
 }
 
 void transmitAssignedLoad(){
- // #ifdef DEBUG
-  Serial.print("Inside transmitAssignedLoad \n");
-  //#endif
-   Serial.print("Sending to child1 \n");
+  #ifdef DEBUG
+  Serial.begin("Inside transmitAssignedLoad \n");
+  #endif
+  
   Wire.beginTransmission(child1Addr);
   sendWord(child1AssignedLoad);
   Wire.endTransmission();
-   Serial.print("Sending to child2 \n");
+  
   Wire.beginTransmission(child2Addr);
   sendWord(child2AssignedLoad);
-  Serial.print("BeforeEndTransmisison\n");
   Wire.endTransmission();
-    Serial.print("afterEndTransmisison\n");
   
   #ifdef DEBUG
   Serial.print("Exit transmitAssignedLoad \n");
@@ -159,35 +143,30 @@ void cycAssignedLoadCalc(){
   #ifdef DEBUG
   Serial.print("Inside cycAssigned Load Calc\n");
   #endif
-  
-  Serial.print("Here\n");
   /*
   The loads to be assigned to the childs 
   */
   childAssignedLoad = analogRead(A0) * 6;  // for six loads in this project
-   Serial.print("Here1\n");
-  if(NodeTotalDemand < childAssignedLoad){
-    child1AssignedLoad = child1DemandedLoad;
-    child2AssignedLoad = child2DemandedLoad;
-    NodeReserve = childAssignedLoad -NodeTotalDemand ;
+  
+  if(NodeTotalDemand > childAssignedLoad){
+    child1AssignedLoad = child1DemandLoad;
+    child2AssignedLoad = child2DemandLoad;
+    NodeReserve = NodeTotalDemand - childAssignedLoad;
   }
-   Serial.print("Here2\n");
-   if(NodeTotalDemand > childAssignedLoad){
+  
+   if(NodeTotalDemand < childAssignedLoad){
     if(child1Prio < child2Prio){
-        child1AssignedLoad = child1DemandedLoad;
+        child1AssignedLoad = child1DemandLoad;
         childAssignedLoad -= child1AssignedLoad;
         child2AssignedLoad = childAssignedLoad;
         NodeReserve = 0;
     }
     else{
-        child2AssignedLoad = child2DemandedLoad;
+        child2AssignedLoad = child2DemandLoad;
         childAssignedLoad -= child2AssignedLoad;
         child1AssignedLoad = childAssignedLoad;
        NodeReserve = 0; 
     }
-   }
-     Serial.print("Here3\n");
-    transmitAssignedLoad();
   #ifdef DEBUG
   Serial.print("exit cycAssigned Load Calc\n");
   #endif
@@ -221,11 +200,7 @@ void cycComm(){
   #ifdef DEBUG
   Serial.print("Inside cycComm\n");
   #endif
-  Serial.print("\ndataSendState1 :");
-  Serial.print(dataSendState1, DEC);
-  Serial.print("\ndataSendState2 :");
-  Serial.print(dataSendState2, DEC);
-  Serial.print("\n");
+ /* 
  
   if(dataSendState1 == LOW){
   
@@ -250,7 +225,7 @@ void cycComm(){
       digitalWrite(dataSend2, dataSendState2);
       delay(CommdurationL);    
       Serial.print("Pulling 2 LOW \n");
-  } 
+  } */
   
   #ifdef DEBUG
   Serial.print("Exit cycComm\n");
@@ -297,7 +272,6 @@ void NodeTask(){
     cycLoadCalc();
     cycPrioCalc();
     cycComm();
-    cycAssignedLoadCalc();
     debug();
     
  #ifdef DEBUG
@@ -311,7 +285,6 @@ void loop(){
   #ifdef DEBUG
   Serial.print("Inside loop \n");
   #endif
-  toggleLED();
     NodeTask();
     //Serial.write("Alive\n");
    // delay(3000);

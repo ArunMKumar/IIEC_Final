@@ -16,15 +16,17 @@ Sketch for the leve0 of the setup */
 #define LOAD2_W   0x04
 #define LOAD3_W   0x05
 
-#define NODE_ADDRESS   0x03
+#define NODE_ADDRESS   0x02
 #define PARENT_ADDRESS 0x01
 #define BufferSize     0x04   // child receives only asigned loads
 #define NUM_LOADS      0x03
 #define TOLERANCE      20U
 #define TIMEOUT        10U
 
-unsigned int led = 13;
-unsigned int ledState = LOW;
+unsigned int aliveLED = 13;
+unsigned int aliveLEDState = LOW;
+unsigned int I2CLED  = 12;
+unsigned int I2CLEDState = LOW;
 unsigned int dataSend = 5;    // Signal to send data
 unsigned char I2CSendState = LOW;
 
@@ -64,17 +66,27 @@ void LoadInit(){
 
 
 void toggleLED(){
-  if(HIGH == ledState){
-    ledState = LOW;
+  if(HIGH == aliveLEDState){
+    aliveLEDState = LOW;
   }
   else
-    ledState = HIGH;
-    digitalWrite(led, ledState);
+    aliveLEDState = HIGH;
+    digitalWrite(aliveLED, aliveLEDState);
+}
+
+void toggleI2CLED(){
+  if(HIGH == I2CLEDState){
+    I2CLEDState = LOW;
+  }
+  else
+    I2CLEDState = HIGH;
+    digitalWrite(I2CLED, I2CLEDState);
 }
 
 
 void setup(){
-  pinMode(led,OUTPUT);
+  pinMode(aliveLED,OUTPUT);
+  pinMode(I2CLED, OUTPUT);
   pinMode(dataSend, INPUT);
 
   LoadInit();
@@ -169,6 +181,8 @@ void cycComm(){
    #ifdef DEBUG
   Serial.print("Inside cycComm\n");
   #endif
+  
+  toggleI2CLED();
   Serial.print("\n============================================\n");
 //  if(LOW == digitalRead(dataSend)){
 //     Serial.print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
@@ -177,7 +191,7 @@ void cycComm(){
 //  }
   
    /* Cyclical comm handled during cyclically */
- //  if(HIGH == digitalRead(dataSend)&& (LOW == I2CSendState)){  // should send only one time
+ if(HIGH == digitalRead(dataSend)&& (LOW == I2CSendState)){  // should send only one time
       I2CSendState = HIGH;  // we will send data only on next level change on datasend pin
       Serial.print("\n Setting datasend1 HIGH\n");
     
@@ -199,7 +213,7 @@ void cycComm(){
 
      Wire.endTransmission();
      Serial.print("Sent the data to Parent\n");
- //  }
+  }
    
    
    Serial.print("\n\nI2CSendState : "); Serial.print(I2CSendState, DEC); Serial.print("\n");
