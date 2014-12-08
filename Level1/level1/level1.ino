@@ -19,15 +19,16 @@ Data to child sent over I2C, data to parent sent over bluetooth
 #define BufferSize     0x0A
 #define child1Addr     0x02
 #define child2Addr     0x03
-#define CommdurationH   100
-#define CommdurationL   100
+//#define CommdurationH   100
+//#define CommdurationL   100
+#define BufferSize      30
 
 
 SoftwareSerial child1(CHILD1RX, CHILD1TX);
 SoftwareSerial child2(CHILD2RX, CHILD2TX);
 static unsigned int I2CCount = 0;
-unsigned char recvBuffer1[30];
-unsigned char recvBuffer2[30];
+unsigned char recvBuffer1[BufferSize];
+unsigned char recvBuffer2[BufferSize];
 
 unsigned int aliveLED = 13;
 unsigned int aliveLEDState = LOW;
@@ -296,9 +297,22 @@ void cycListen(){
   #ifdef DEBUG
   Serial.print("Inside cyc Loisten \n");
   #endif
+  int i = 0;
   
   if(child1.available()){
-    
+    while(child1.available()){
+      recvBuffer1[i] = child1.read();
+      i++;
+    }
+    i =0;
+  }
+  
+   if(child2.available()){
+    while(child2.available()){
+      recvBuffer2[i] = child1.read();
+      i++;
+    }
+  }
 
   
 void NodeTask(){
