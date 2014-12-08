@@ -36,8 +36,6 @@ unsigned int dataSend = 5;    // Signal to send data
 unsigned char I2CSendState = LOW;
 
 char recvBuffer[BufferSize];
-
-
 unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
 unsigned int NodeAssignedLoad = 1230;

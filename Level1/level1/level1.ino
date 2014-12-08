@@ -17,11 +17,12 @@ Data to child sent over I2C, data to parent sent over bluetooth
 #define CHILD2TX       0x05
 //#define PARENT_ADDRESS 0x00
 #define BufferSize     0x0A
+#define FRAME_SIZE     0x08
 #define child1Addr     0x02
 #define child2Addr     0x03
 //#define CommdurationH   100
 //#define CommdurationL   100
-#define BufferSize      30
+
 
 
 SoftwareSerial child1(CHILD1RX, CHILD1TX);
@@ -297,30 +298,34 @@ void cycListen(){
   #ifdef DEBUG
   Serial.print("Inside cyc Loisten \n");
   #endif
-  int i = 0;
+  static int i=0,j=0;
   
   if(child1.available()){
     while(child1.available()){
       recvBuffer1[i] = child1.read();
       i++;
     }
-    i =0;
   }
   
    if(child2.available()){
     while(child2.available()){
       recvBuffer2[i] = child1.read();
-      i++;
+      j++;
     }
   }
   
-  child1TotalLoad =*((unsigned int*)recvBuffer1[0]); 
-  child1DemandedLoad = *((unsigned int*)recvBuffer1[0]+ 1);  
-  child1Prio = *((float*)recvBuffer1[0]+ 1);
-  
-  child2TotalLoad =*((unsigned int*)recvBuffer2[0]); 
-  child2DemandedLoad = *((unsigned int*)recvBuffer2[0]+ 1);  
-  child2Prio = *((float*)recvBuffer2[0]+ 1);
+  if(i == FRAME_SIZE){
+    
+    child1TotalLoad =*((unsigned int*)recvBuffer1[0]); 
+    child1DemandedLoad = *((unsigned int*)recvBuffer1[0]+ 1);  
+    child1Prio = *((float*)recvBuffer1[0]+ 1);
+    i = 0;
+  }
+  if(j == FRAME_SIZE){
+    child2TotalLoad =*((unsigned int*)recvBuffer2[0]); 
+    child2DemandedLoad = *((unsigned int*)recvBuffer2[0]+ 1);  
+    child2Prio = *((float*)recvBuffer2[0]+ 1);
+  }
   
    #ifdef DEBUG
   Serial.print("Exit cyc Loisten \n");
