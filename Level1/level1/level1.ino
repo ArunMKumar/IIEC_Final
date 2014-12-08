@@ -26,6 +26,8 @@ Data to child sent over I2C, data to parent sent over bluetooth
 SoftwareSerial child1(CHILD1RX, CHILD1TX);
 SoftwareSerial child2(CHILD2RX, CHILD2TX);
 static unsigned int I2CCount = 0;
+unsigned char recvBuffer1[30];
+unsigned char recvBuffer2[30];
 
 unsigned int aliveLED = 13;
 unsigned int aliveLEDState = LOW;
@@ -288,6 +290,15 @@ void debug(){
   #endif
 }
 
+void cycListen(){
+  /*
+  here we receive data from the child*/
+  #ifdef DEBUG
+  Serial.print("Inside cyc Loisten \n");
+  #endif
+  
+  if(child1.available()){
+    
 
   
 void NodeTask(){
@@ -299,6 +310,7 @@ void NodeTask(){
     cycPrioCalc();
     cycComm();
     cycAssignedLoadCalc();
+    cycListen();
     debug();
     
  #ifdef DEBUG
@@ -327,7 +339,7 @@ void loop(){
                      ISR
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 
-void receiveEvent(int howMany){
+/*void receiveEvent(int howMany){
  
   toggleLED();
   I2CCount++;
@@ -342,7 +354,7 @@ void receiveEvent(int howMany){
    child1DemandedLoad = *(((unsigned int*)&recvBuffer[1]) + 1);
    child1Prio =   *(((float*)&recvBuffer[1]) + 1);
   }
-  
+  */
 /*  // was child 2 requested
   if(dataSendState2 == HIGH){
     while(0 < Wire.available()){
