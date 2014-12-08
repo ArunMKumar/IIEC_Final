@@ -74,11 +74,11 @@ void toggleLED(){
 void setup(){
   pinMode(I2Cled,OUTPUT);
   pinMode(aliveLED, OUTPUT);
-  pinMode(dataSend1, OUTPUT);
-  pinMode(dataSend2, OUTPUT);
+//  pinMode(dataSend1, OUTPUT);
+//  pinMode(dataSend2, OUTPUT);
 //  pinMode(recvData, INPUT);
-  Wire.begin(NODE_ADDRESS);
-  Wire.onReceive(receiveEvent);
+//  Wire.begin(NODE_ADDRESS);
+//  Wire.onReceive(receiveEvent);
   Serial.begin(9600);
   Serial.print("Node_Address :");
   Serial.print(NODE_ADDRESS);
@@ -225,10 +225,10 @@ void cycComm(){
   #ifdef DEBUG
   Serial.print("Inside cycComm\n");
   #endif
-  Serial.print("\ndataSendState1 :");
-  Serial.print(dataSendState1, DEC);
-  Serial.print("\ndataSendState2 :");
-  Serial.print(dataSendState2, DEC);
+  Serial.print("\nchild1DataReq :");
+  Serial.print(child1DataReq, DEC);
+  Serial.print("\nchild2DataReq :");
+  Serial.print(child2DataReq, DEC);
   Serial.print("\n");
  
   if(child1DataReq == LOW){
@@ -313,6 +313,20 @@ void cycListen(){
       i++;
     }
   }
+  
+  child1TotalLoad =*((unsigned int*)recvBuffer1[0]); 
+  child1DemandedLoad = *((unsigned int*)recvBuffer1[0]+ 1);  
+  child1Prio = *((float*)recvBuffer1[0]+ 1);
+  
+  child2TotalLoad =*((unsigned int*)recvBuffer2[0]); 
+  child2DemandedLoad = *((unsigned int*)recvBuffer2[0]+ 1);  
+  child2Prio = *((float*)recvBuffer2[0]+ 1);
+  
+   #ifdef DEBUG
+  Serial.print("Exit cyc Loisten \n");
+  #endif
+}
+
 
   
 void NodeTask(){
@@ -377,11 +391,11 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*
       }
     }*/
    // dataSendState2 == LOW;
-    if(recvBuffer[0] = 0x03){
-   child2TotalLoad = *((unsigned int*)recvBuffer);
-   child2DemandedLoad = *(((unsigned int*)recvBuffer) + 1);
-   child2Prio =   *(((float*)recvBuffer) + 2*sizeof(int));
-  }
+ //   if(recvBuffer[0] = 0x03){
+//   child2TotalLoad = *((unsigned int*)recvBuffer);
+//   child2DemandedLoad = *(((unsigned int*)recvBuffer) + 1);
+//   child2Prio =   *(((float*)recvBuffer) + 2*sizeof(int));
+//  }
 //  dataSendState1  = LOW;
 ///  digitalWrite(dataSend1, dataSendState1);
 //  dataSendState2  = LOW; 
