@@ -35,7 +35,6 @@ unsigned int   I2CLEDState = LOW;
 unsigned int   parentDataReq = LOW;    // Signal to send data
 unsigned char  dataSendState = LOW;
 
-unsigned char recvBuffer[BufferSize];
 unsigned int NodeTotalLoad = 1234;
 unsigned int NodeTotalDemand = 1234;
 unsigned int NodeAssignedLoad = 1230;
@@ -90,7 +89,7 @@ void toggleI2CLED(){
 void setup(){
   pinMode(aliveLED,OUTPUT);
   pinMode(I2CLED, OUTPUT);
-  pinMode(dataSend, INPUT);
+ // pinMode(dataSend, INPUT);
 
   LoadInit();
   Wire.begin(NODE_ADDRESS);
@@ -194,8 +193,8 @@ void cycComm(){
 //  }
   
    /* Cyclical comm handled during cyclically */
- if(HIGH == digitalRead(dataSend)&& (LOW == I2CSendState)){  // should send only one time
-      I2CSendState = HIGH;  // we will send data only on next level change on datasend pin
+ if((HIGH == parentDataReq)&& (LOW == dataSendState)){  // should send only one time
+      //I2CSendState = HIGH;  // we will send data only on next level change on datasend pin
       Serial.print("\n Setting datasend1 HIGH\n");
     
       // we need to send data/     
@@ -213,7 +212,7 @@ void cycComm(){
      Serial.print("Total Demand Written\n");
      sendFloat(NodePrio, &parent);
      Serial.print("Prio Written :\n");
-
+      dataSendState = HIGH; //we should not sent data continuously
    //  Wire.endTransmission();
      Serial.print("Sent the data to Parent\n");
   }
@@ -348,11 +347,13 @@ void cycLogic(){
        recvBuffer[i] = parent.read();
      }
      i =0;
-   }
+   
    
    if(recvBuffer[0] == SEND_DATA){
        parentDataReq = HIGH;
+       dataSendState = LOW;   // this will be changed to HIGH in comm so that data is not sent repeatedly
    }
+  }
   
   #ifndef DEBUG
    Serial.print("Exit cyc Listen\n");
