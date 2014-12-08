@@ -10,6 +10,7 @@ Data to child sent over I2C, data to parent sent over bluetooth
 
 //#define DEBUG
 #define NODE_ADDRESS   0x01
+#define SEND_DATA      0xAA
 #define CHILD1RX       0x02
 #define CHILD1TX       0x03
 #define CHILD2RX       0x04
@@ -227,29 +228,29 @@ void cycComm(){
   Serial.print(dataSendState2, DEC);
   Serial.print("\n");
  
-  if(dataSendState1 == LOW){
+  if(child1DataReq == LOW){
   
-      dataSendState1 = HIGH;
-      Serial.print("Pulling 1 high \n");
-      digitalWrite(dataSend1, dataSendState1);
-      delay(CommdurationH);
-      dataSendState1 =LOW;   // pull the line low now
-      digitalWrite(dataSend1, dataSendState1);
-      delay(CommdurationL);    
-      Serial.print("Pulling 1 LOW \n");
+      child1DataReq = HIGH;
+      Serial.print("Requesting child 1 \n");
+      child1.write(SEND_DATA);
+     // delay(CommdurationH);
+     // dataSendState1 =LOW;   // pull the line low now
+    //  digitalWrite(dataSend1, dataSendState1);
+    //  delay(CommdurationL);    
+   //   Serial.print("Pulling 1 LOW \n");
   } 
   
 
-   if(dataSendState2 == LOW){
+   if(child2DataReq == LOW){
   
-      dataSendState2 = HIGH;
-      Serial.print("Pulling 2 high \n");
-      digitalWrite(dataSend2, dataSendState2);
-      delay(CommdurationH);
-      dataSendState2 =LOW;   // pull the line low now
-      digitalWrite(dataSend2, dataSendState2);
-      delay(CommdurationL);    
-      Serial.print("Pulling 2 LOW \n");
+      child2DataReq = HIGH;
+      Serial.print("Requesting child2 \n");
+      child2.write(SEND_DATA);
+     // delay(CommdurationH);
+     // dataSendState2 =LOW;   // pull the line low now
+     // digitalWrite(dataSend2, dataSendState2);
+    //  delay(CommdurationL);    
+    //  Serial.print("Pulling 2 LOW \n");
   } 
   
   #ifdef DEBUG
