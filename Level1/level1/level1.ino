@@ -6,7 +6,7 @@ Data to child sent over I2C, data to parent sent over bluetooth
 #include <Wire.h>
 #include <SoftwareSerial.h>
 
-SoftwareSerial.child1(
+
 
 //#define DEBUG
 #define NODE_ADDRESS   0x01
@@ -22,18 +22,18 @@ SoftwareSerial.child1(
 #define CommdurationL   100
 
 
-SoftwareSerial.child1(CHILD1RX, CHILD1TX);
-SoftwareSerial.child1(CHILD2RX, CHILD3TX);
+SoftwareSerial child1(CHILD1RX, CHILD1TX);
+SoftwareSerial child2(CHILD2RX, CHILD2TX);
 static unsigned int I2CCount = 0;
 
 unsigned int aliveLED = 13;
 unsigned int aliveLEDState = LOW;
 unsigned int I2Cled = 12;
 unsigned int I2CledState = LOW;
-unsigned int dataSend1 = 5;    // Signal to send data slave1
-unsigned int dataSend2 = 6;    // signal to send data slave2
-unsigned char dataSendState1 = LOW;
-unsigned char dataSendState2 = LOW;
+//unsigned int child1 = 5;    // Signal to send data slave1
+//unsigned int dataSend2 = 6;    // signal to send data slave2
+unsigned char child1DataReq = LOW;
+unsigned char child2DataReq = LOW;
 unsigned int childAssignedLoad = 0x00;
 
 //unsigned int recvData = 6;
@@ -85,27 +85,27 @@ void setup(){
                       Conversions Task
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 
-void sendFloat(float data){
+void sendFloat(float data, SoftwareSerial* child){
   #ifdef DEBUG
   Serial.print("Inside send Float\n");
   #endif
   char *c = (char*)&data; 
-  Wire.write(*c);
-  Wire.write(*(c+1));
-  Wire.write(*(c+2));
-  Wire.write(*(c+3));
+  child->write(*c);
+  child->write(*(c+1));
+  child->write(*(c+2));
+  child->write(*(c+3));
   #ifdef DEBUG
   Serial.print("Exit send Float\n");
   #endif
 }
 
-void sendWord(unsigned int data){
+void sendWord(unsigned int data, SoftwareSerial* child){
   #ifdef DEBUG
   Serial.print("Inside send Word\n");
   #endif
   char *c = (char*)&data; 
-  Wire.write(*c);
-  Wire.write(*(c+1));
+  child->write(*c);
+  child->write(*(c+1));
   #ifdef DEBUG
   Serial.print("Exit send Word\n");
   #endif
@@ -134,19 +134,19 @@ void cycLoadCalc(){
   #endif
 }
 
-void transmitAssignedLoad(){
+void transmitAssignedLoad(SoftwareSerial* child1, SoftwareSerial* child2){
  // #ifdef DEBUG
   Serial.print("Inside transmitAssignedLoad \n");
   //#endif
    Serial.print("Sending to child1 \n");
-  Wire.beginTransmission(child1Addr);
-  sendWord(child1AssignedLoad);
-  Wire.endTransmission();
+ // Wire.beginTransmission(child1Addr);
+  sendWord(child1AssignedLoad, child1);
+ // Wire.endTransmission();
    Serial.print("Sending to child2 \n");
-  Wire.beginTransmission(child2Addr);
-  sendWord(child2AssignedLoad);
+  //Wire.beginTransmission(child2Addr, child);
+  sendWord(child2AssignedLoad, child2);
   Serial.print("BeforeEndTransmisison\n");
-  Wire.endTransmission();
+  //Wire.endTransmission();
     Serial.print("afterEndTransmisison\n");
   
   #ifdef DEBUG
@@ -187,7 +187,7 @@ void cycAssignedLoadCalc(){
     }
    }
      Serial.print("Here3\n");
-    transmitAssignedLoad();
+    transmitAssignedLoad(&child1, &child2);
   #ifdef DEBUG
   Serial.print("exit cycAssigned Load Calc\n");
   #endif
