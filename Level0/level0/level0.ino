@@ -2,6 +2,7 @@
 Sketch for the leve0 of the setup */
 
 #include <Wire.h>
+#include <SoftwareSerial.h>
 
 #define DEBUG
 #define FALSE      0
@@ -17,12 +18,16 @@ Sketch for the leve0 of the setup */
 #define LOAD3_W   0x05
 
 #define NODE_ADDRESS   0x02
+#define PARENT_RX      0x05
+#define PARENT_TX      0x06
 #define PARENT_ADDRESS 0x01
-#define BufferSize     0x04   // child receives only asigned loads
+#define BufferSize     0x0A   // child receives only asigned loads
 #define NUM_LOADS      0x03
 #define TOLERANCE      20U
 #define TIMEOUT        10U
 
+
+unsigned char recvBuffer[BufferSize];
 unsigned int aliveLED = 13;
 unsigned int aliveLEDState = LOW;
 unsigned int I2CLED  = 12;
